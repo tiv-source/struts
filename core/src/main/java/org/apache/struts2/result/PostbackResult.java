@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,18 +18,19 @@
  */
 package org.apache.struts2.result;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.inject.Inject;
-import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
+import java.io.Serial;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -76,8 +75,9 @@ import java.util.Map;
  */
 public class PostbackResult extends StrutsResultSupport {
 
+    @Serial
     private static final long serialVersionUID = -2283504349296877429L;
-    
+
     private String actionName;
     private String namespace;
     private String method;
@@ -89,8 +89,8 @@ public class PostbackResult extends StrutsResultSupport {
     @Override
     protected void doExecute(String finalLocation, ActionInvocation invocation) throws Exception {
         ActionContext ctx = invocation.getInvocationContext();
-        HttpServletRequest request = (HttpServletRequest) ctx.get(ServletActionContext.HTTP_REQUEST);
-        HttpServletResponse response = (HttpServletResponse) ctx.get(ServletActionContext.HTTP_RESPONSE);
+        HttpServletRequest request = ctx.getServletRequest();
+        HttpServletResponse response = ctx.getServletResponse();
 
         // Cache?
         if (!cache) {
@@ -101,7 +101,7 @@ public class PostbackResult extends StrutsResultSupport {
 
         //set contenttype @see ww-4564
         response.setContentType("text/html");
-        
+
         // Render
         PrintWriter pw = new PrintWriter(response.getOutputStream());
         pw.write("<!DOCTYPE html><html><body><form action=\"" + finalLocation + "\" method=\"POST\">");
@@ -113,6 +113,10 @@ public class PostbackResult extends StrutsResultSupport {
 
     @Override
     public void execute(ActionInvocation invocation) throws Exception {
+        if (invocation == null) {
+            throw new IllegalArgumentException("Invocation cannot be null!");
+        }
+
         String postbackUri = makePostbackUri(invocation);
         setLocation(postbackUri);
         super.execute(invocation);
@@ -121,7 +125,7 @@ public class PostbackResult extends StrutsResultSupport {
     /**
      * Determines if the specified form input element should be included.
      *
-     * @param name the input element name
+     * @param name   the input element name
      * @param values the input element values
      * @return {@code true} if included; otherwise {@code false}
      */
@@ -131,11 +135,12 @@ public class PostbackResult extends StrutsResultSupport {
 
     protected String makePostbackUri(ActionInvocation invocation) {
         ActionContext ctx = invocation.getInvocationContext();
-        HttpServletRequest request = (HttpServletRequest) ctx.get(ServletActionContext.HTTP_REQUEST);
+        HttpServletRequest request = ctx.getServletRequest();
         String postbackUri;
 
         if (actionName != null) {
             actionName = conditionalParse(actionName, invocation);
+            parseLocation = false;
             if (namespace == null) {
                 namespace = invocation.getProxy().getNamespace();
             } else {
@@ -150,9 +155,9 @@ public class PostbackResult extends StrutsResultSupport {
         } else {
             String location = getLocation();
             // Do not prepend if the URL is a FQN
-            if (!location.matches("^([a-zA-z]+:)?//.*")) {
+            if (!location.matches("^([a-zA-Z]+:)?//.*")) {
                 // If the URL is relative to the servlet context, prepend the servlet context path
-                if (prependServletContext && (request.getContextPath() != null) && (request.getContextPath().length() > 0)) {
+                if (prependServletContext && request.getContextPath() != null && !request.getContextPath().isEmpty()) {
                     location = request.getContextPath() + location;
                 }
             }
@@ -179,6 +184,7 @@ public class PostbackResult extends StrutsResultSupport {
     /**
      * Stores the option to cache the rendered intermediate page. The default
      * is {@code true}.
+     *
      * @param cache enable/disable cache
      */
     public final void setCache(boolean cache) {
@@ -209,16 +215,17 @@ public class PostbackResult extends StrutsResultSupport {
 
     protected void writeFormElement(PrintWriter pw, String name, String[] values) throws UnsupportedEncodingException {
         for (String value : values) {
-            String encName = URLEncoder.encode(name, "UTF-8");
-            String encValue = URLEncoder.encode(value, "UTF-8");
+            String encName = URLEncoder.encode(name, StandardCharsets.UTF_8);
+            String encValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
             pw.write("<input type=\"hidden\" name=\"" + encName + "\" value=\"" + encValue + "\"/>");
         }
     }
 
     private void writeFormElements(HttpServletRequest request, PrintWriter pw) throws UnsupportedEncodingException {
         Map<String, String[]> params = request.getParameterMap();
-        for (String name : params.keySet()) {
-            String[] values = params.get(name);
+        for (Map.Entry<String, String[]> entry : params.entrySet()) {
+            String name = entry.getKey();
+            String[] values = entry.getValue();
             if (isElementIncluded(name, values)) {
                 writeFormElement(pw, name, values);
             }

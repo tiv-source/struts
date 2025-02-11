@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.rest;
 
-import com.opensymphony.xwork2.config.Configuration;
-import com.opensymphony.xwork2.config.ConfigurationManager;
-import com.opensymphony.xwork2.config.entities.PackageConfig;
-import com.opensymphony.xwork2.inject.Inject;
+import org.apache.struts2.config.Configuration;
+import org.apache.struts2.config.ConfigurationManager;
+import org.apache.struts2.config.entities.PackageConfig;
+import org.apache.struts2.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,25 +30,25 @@ import org.apache.struts2.StrutsConstants;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.dispatcher.mapper.DefaultActionMapper;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 
 /**
  * <!-- START SNIPPET: description -->
  *
- * This Restful action mapper enforces Ruby-On-Rails Rest-style mappings.  If the method 
- * is not specified (via '!' or 'method:' prefix), the method is "guessed" at using 
+ * This Restful action mapper enforces Ruby-On-Rails Rest-style mappings.  If the method
+ * is not specified (via '!' or 'method:' prefix), the method is "guessed" at using
  * ReST-style conventions that examine the URL and the HTTP method.  Special care has
  * been given to ensure this mapper works correctly with the codebehind plugin so that
  * XML configuration is unnecessary.
- *  
+ *
  * <p>
  *   This mapper supports the following parameters:
  * </p>
  * <ul>
  *   <li><code>struts.mapper.idParameterName</code> - If set, this value will be the name
  *       of the parameter under which the id is stored.  The id will then be removed
- *       from the action name.  Whether or not the method is specified, the mapper will 
+ *       from the action name.  Whether or not the method is specified, the mapper will
  *       try to truncate the identifier from the url and store it as a parameter.
  *   </li>
  *   <li><code>struts.mapper.indexMethodName</code> - The method name to call for a GET
@@ -79,7 +76,7 @@ import java.util.HashMap;
  * <p>
  * The following URL's will invoke its methods:
  * </p>
- * <ul> 
+ * <ul>
  *  <li><code>GET:    /movies                =&gt; method="index"</code></li>
  *  <li><code>GET:    /movies/Thrillers      =&gt; method="show", id="Thrillers"</code></li>
  *  <li><code>GET:    /movies/Thrillers;edit =&gt; method="edit", id="Thrillers"</code></li>
@@ -119,11 +116,11 @@ public class RestActionMapper extends DefaultActionMapper {
     private String postContinueMethodName = "createContinue";
     private String putContinueMethodName = "updateContinue";
     private boolean allowDynamicMethodCalls = false;
-    
+
     public RestActionMapper() {
         this.defaultMethodName = indexMethodName;
     }
-    
+
     public String getIdParameterName() {
         return idParameterName;
     }
@@ -133,52 +130,52 @@ public class RestActionMapper extends DefaultActionMapper {
         this.idParameterName = idParameterName;
     }
 
-    @Inject(required=false,value="struts.mapper.indexMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_INDEX_METHOD_NAME)
     public void setIndexMethodName(String indexMethodName) {
         this.indexMethodName = indexMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.getMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_GET_METHOD_NAME)
     public void setGetMethodName(String getMethodName) {
         this.getMethodName = getMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.postMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_POST_METHOD_NAME)
     public void setPostMethodName(String postMethodName) {
         this.postMethodName = postMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.editMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_EDIT_METHOD_NAME)
     public void setEditMethodName(String editMethodName) {
         this.editMethodName = editMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.newMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_NEW_METHOD_NAME)
     public void setNewMethodName(String newMethodName) {
         this.newMethodName = newMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.deleteMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_DELETE_METHOD_NAME)
     public void setDeleteMethodName(String deleteMethodName) {
         this.deleteMethodName = deleteMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.putMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_PUT_METHOD_NAME)
     public void setPutMethodName(String putMethodName) {
         this.putMethodName = putMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.optionsMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_OPTIONS_METHOD_NAME)
     public void setOptionsMethodName(String optionsMethodName) {
         this.optionsMethodName = optionsMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.postContinueMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_POST_CONTINUE_METHOD_NAME)
     public void setPostContinueMethodName(String postContinueMethodName) {
         this.postContinueMethodName = postContinueMethodName;
     }
 
-    @Inject(required=false,value="struts.mapper.putContinueMethodName")
+    @Inject(required = false, value = RestConstants.REST_MAPPER_PUT_CONTINUE_METHOD_NAME)
     public void setPutContinueMethodName(String putContinueMethodName) {
         this.putContinueMethodName = putContinueMethodName;
     }
@@ -187,7 +184,7 @@ public class RestActionMapper extends DefaultActionMapper {
     public void setAllowDynamicMethodCalls(String allowDynamicMethodCalls) {
         this.allowDynamicMethodCalls = "true".equalsIgnoreCase(allowDynamicMethodCalls);
     }
-    
+
     public ActionMapping getMapping(HttpServletRequest request,
             ConfigurationManager configManager) {
         ActionMapping mapping = new ActionMapping();
@@ -241,14 +238,14 @@ public class RestActionMapper extends DefaultActionMapper {
 
             	if (isOptions(request)) {
                 	mapping.setMethod(optionsMethodName);
-                
+
             	// Handle uris with no id, possibly ending in '/'
             	} else if (lastSlashPos == -1 || lastSlashPos == fullName.length() -1) {
 
                     // Index e.g. foo
                     if (isGet(request)) {
                         mapping.setMethod(indexMethodName);
-                        
+
                     // Creating a new entry on POST e.g. foo
                     } else if (isPost(request)) {
                     	if (isExpectContinue(request)) {
@@ -260,12 +257,12 @@ public class RestActionMapper extends DefaultActionMapper {
 
                 // Handle uris with an id at the end
                 } else if (id != null) {
-                    
+
                     // Viewing the form to edit an item e.g. foo/1;edit
                     if (isGet(request) && id.endsWith(";edit")) {
                         id = id.substring(0, id.length() - ";edit".length());
                         mapping.setMethod(editMethodName);
-                        
+
                     // Viewing the form to create a new item e.g. foo/new
                     } else if (isGet(request) && "new".equals(id)) {
                         mapping.setMethod(newMethodName);
@@ -273,12 +270,12 @@ public class RestActionMapper extends DefaultActionMapper {
                     // Removing an item e.g. foo/1
                     } else if (isDelete(request)) {
                         mapping.setMethod(deleteMethodName);
-                        
+
                     // Viewing an item e.g. foo/1
                     } else if (isGet(request)) {
                         mapping.setMethod(getMethodName);
-                    
-                    // Updating an item e.g. foo/1    
+
+                    // Updating an item e.g. foo/1
                     }  else if (isPut(request)) {
                     	if (isExpectContinue(request)) {
                             mapping.setMethod(putContinueMethodName);
@@ -329,7 +326,7 @@ public class RestActionMapper extends DefaultActionMapper {
     }
 
     /**
-     * Parses the name and namespace from the uri.  Uses the configured package 
+     * Parses the name and namespace from the uri.  Uses the configured package
      * namespaces to determine the name and id parameter, to be parsed later.
      *
      * @param uri
@@ -367,7 +364,7 @@ public class RestActionMapper extends DefaultActionMapper {
             name = uri.substring(namespace.length() + 1);
         }
 
-        mapping.setNamespace(namespace);
+        mapping.setNamespace(cleanupNamespaceName(namespace));
         mapping.setName(name);
     }
 
@@ -390,10 +387,10 @@ public class RestActionMapper extends DefaultActionMapper {
     protected boolean isOptions(HttpServletRequest request) {
         return OPTIONS.equalsIgnoreCase(request.getMethod());
     }
-    
+
     protected boolean isExpectContinue(HttpServletRequest request) {
     	String expect = request.getHeader("Expect");
-    	return (expect != null && expect.toLowerCase().contains("100-continue")); 
+    	return (expect != null && expect.toLowerCase().contains("100-continue"));
     }
 
 }

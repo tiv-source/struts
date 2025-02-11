@@ -1,21 +1,38 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.struts2.showcase.validation;
+
+import org.apache.struts2.validator.annotations.DateRangeFieldValidator;
+import org.apache.struts2.validator.annotations.EmailValidator;
+import org.apache.struts2.validator.annotations.FieldExpressionValidator;
+import org.apache.struts2.validator.annotations.IntRangeFieldValidator;
+import org.apache.struts2.validator.annotations.RegexFieldValidator;
+import org.apache.struts2.validator.annotations.RequiredFieldValidator;
+import org.apache.struts2.validator.annotations.RequiredStringValidator;
+import org.apache.struts2.validator.annotations.StringLengthFieldValidator;
+import org.apache.struts2.validator.annotations.UrlValidator;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 
 import java.sql.Date;
 
-import com.opensymphony.xwork2.validator.annotations.DateRangeFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.EmailValidator;
-import com.opensymphony.xwork2.validator.annotations.FieldExpressionValidator;
-import com.opensymphony.xwork2.validator.annotations.IntRangeFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.RegexFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.RequiredFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.RequiredStringValidator;
-import com.opensymphony.xwork2.validator.annotations.StringLengthFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.UrlValidator;
-
 /**
  * <!-- START SNIPPET: ajaxFormSubmit -->
- */
-/**
  * Example Action that shows how forms can be validated and submitted via AJAX
  * only. Form-submit-and-page-reload functionality of browsers is not used for
  * this action.
@@ -56,9 +73,10 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
     @DateRangeFieldValidator(
-        min="01/01/1990", 
-        max="01/01/2000", 
+        min="01/01/1990",
+        max="01/01/2000",
         message="must be a min 01-01-1990 max 01-01-2000 if supplied")
+    @StrutsParameter
     public void setDateValidatorField(Date dateValidatorField) {
         this.dateValidatorField = dateValidatorField;
     }
@@ -68,6 +86,7 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
     @EmailValidator(message="must be a valid email if supplied")
+    @StrutsParameter
     public void setEmailValidatorField(String emailValidatorField) {
         this.emailValidatorField = emailValidatorField;
     }
@@ -77,6 +96,7 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
     @IntRangeFieldValidator(min="1", max="10", message="must be integer min 1 max 10 if supplied")
+    @StrutsParameter
     public void setIntegerValidatorField(Integer integerValidatorField) {
         this.integerValidatorField = integerValidatorField;
     }
@@ -86,8 +106,9 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
     @RegexFieldValidator(
-        regex="[^<>]+", 
+        regex="[^<>]+",
         message="regexValidatorField must match a regexp (.*\\.txt) if specified")
+    @StrutsParameter
     public void setRegexValidatorField(String regexValidatorField) {
         this.regexValidatorField = regexValidatorField;
     }
@@ -97,6 +118,7 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
     @RequiredStringValidator(trim=true, message="required and must be string")
+    @StrutsParameter
     public void setRequiredStringValidatorField(String requiredStringValidatorField) {
         this.requiredStringValidatorField = requiredStringValidatorField;
     }
@@ -106,6 +128,7 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
     @RequiredFieldValidator(message="required")
+    @StrutsParameter
     public void setRequiredValidatorField(String requiredValidatorField) {
         this.requiredValidatorField = requiredValidatorField;
     }
@@ -115,10 +138,11 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
     @StringLengthFieldValidator(
-        minLength="2", 
-        maxLength="4", 
-        trim=true, 
+        minLength="2",
+        maxLength="4",
+        trim=true,
         message="must be a String of a specific greater than 1 less than 5 if specified")
+    @StrutsParameter
     public void setStringLengthValidatorField(String stringLengthValidatorField) {
         this.stringLengthValidatorField = stringLengthValidatorField;
     }
@@ -128,10 +152,10 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
 	@FieldExpressionValidator(
-        expression = "(fieldExpressionValidatorField == requiredValidatorField)", 
+        expression = "(fieldExpressionValidatorField == requiredValidatorField)",
         message = "must be the same as the Required Validator Field if specified")
-    public void setFieldExpressionValidatorField(
-            String fieldExpressionValidatorField) {
+    @StrutsParameter
+    public void setFieldExpressionValidatorField(String fieldExpressionValidatorField) {
         this.fieldExpressionValidatorField = fieldExpressionValidatorField;
     }
 
@@ -140,6 +164,7 @@ public class AjaxFormSubmitAction extends AbstractValidationActionSupport {
     }
 
     @UrlValidator(message="must be a valid url if supplied")
+    @StrutsParameter
     public void setUrlValidatorField(String urlValidatorField) {
         this.urlValidatorField = urlValidatorField;
     }

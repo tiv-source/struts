@@ -1,6 +1,4 @@
 /*
- * $Id: DefaultActionSupport.java 651946 2008-04-27 13:41:38Z apetrelli $
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,27 +18,25 @@
  */
 package org.apache.struts2.dispatcher.filter;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.RequestUtils;
 import org.apache.struts2.StrutsStatics;
 import org.apache.struts2.dispatcher.Dispatcher;
-import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.dispatcher.ExecuteOperations;
 import org.apache.struts2.dispatcher.InitOperations;
 import org.apache.struts2.dispatcher.PrepareOperations;
+import org.apache.struts2.dispatcher.mapper.ActionMapping;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Handles both the preparation and execution phases of the Struts dispatching process.  This filter is better to use
@@ -52,20 +48,18 @@ public class StrutsPrepareAndExecuteFilter implements StrutsStatics, Filter {
 
     protected PrepareOperations prepare;
     protected ExecuteOperations execute;
-    protected List<Pattern> excludedPatterns = null;
 
+    @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        InitOperations init = new InitOperations();
+        InitOperations init = createInitOperations();
         Dispatcher dispatcher = null;
         try {
             FilterHostConfig config = new FilterHostConfig(filterConfig);
-            init.initLogging(config);
             dispatcher = init.initDispatcher(config);
             init.initStaticContentLoader(config, dispatcher);
 
-            prepare = new PrepareOperations(dispatcher);
-            execute = new ExecuteOperations(dispatcher);
-            this.excludedPatterns = init.buildExcludedPatternsList(dispatcher);
+            prepare = createPrepareOperations(dispatcher);
+            execute = createExecuteOperations(dispatcher);
 
             postInit(dispatcher, filterConfig);
         } finally {
@@ -77,48 +71,94 @@ public class StrutsPrepareAndExecuteFilter implements StrutsStatics, Filter {
     }
 
     /**
+     * Creates a new instance of {@link InitOperations} to be used during
+     * initialising {@link Dispatcher}
+     *
+     * @return instance of {@link InitOperations}
+     */
+    protected InitOperations createInitOperations() {
+        return new InitOperations();
+    }
+
+    /**
+     * Creates a new instance of {@link PrepareOperations} to be used during
+     * initialising {@link Dispatcher}
+     *
+     * @return instance of {@link PrepareOperations}
+     */
+    protected PrepareOperations createPrepareOperations(Dispatcher dispatcher) {
+        return new PrepareOperations(dispatcher);
+    }
+
+    /**
+     * Creates a new instance of {@link ExecuteOperations} to be used during
+     * initialising {@link Dispatcher}
+     *
+     * @return instance of {@link ExecuteOperations}
+     */
+    protected ExecuteOperations createExecuteOperations(Dispatcher dispatcher) {
+        return new ExecuteOperations(dispatcher);
+    }
+
+    /**
      * Callback for post initialization
      *
-     * @param dispatcher the dispatcher
+     * @param dispatcher   the dispatcher
      * @param filterConfig the filter config
      */
     protected void postInit(Dispatcher dispatcher, FilterConfig filterConfig) {
     }
 
+    @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
 
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
         try {
+            prepare.trackRecursion(request);
             String uri = RequestUtils.getUri(request);
-            if (excludedPatterns != null && prepare.isUrlExcluded(request, excludedPatterns)) {
-                LOG.trace("Request {} is excluded from handling by Struts, passing request to other filters", uri);
+            if (prepare.isUrlExcluded(request)) {
+                LOG.trace("Request: {} is excluded from handling by Struts, passing request to other filters", uri);
                 chain.doFilter(request, response);
             } else {
-                LOG.trace("Checking if {} is a static resource", uri);
-                boolean handled = execute.executeStaticResourceRequest(request, response);
-                if (!handled) {
-                    LOG.trace("Assuming uri {} as a normal action", uri);
-                    prepare.setEncodingAndLocale(request, response);
-                    prepare.createActionContext(request, response);
-                    prepare.assignDispatcherToThread();
-                    request = prepare.wrapRequest(request);
-                    ActionMapping mapping = prepare.findActionMapping(request, response, true);
-                    if (mapping == null) {
-                        LOG.trace("Cannot find mapping for {}, passing to other filters", uri);
-                        chain.doFilter(request, response);
-                    } else {
-                        LOG.trace("Found mapping {} for {}", mapping, uri);
-                        execute.executeAction(request, response, mapping);
-                    }
-                }
+                tryHandleRequest(chain, request, response, uri);
             }
         } finally {
             prepare.cleanupRequest(request);
         }
     }
 
+    private void tryHandleRequest(FilterChain chain, HttpServletRequest request, HttpServletResponse response, String uri) throws IOException, ServletException {
+        LOG.trace("Checking if: {} is a static resource", uri);
+        boolean handled = execute.executeStaticResourceRequest(request, response);
+        if (!handled) {
+            LOG.trace("Uri: {} is not a static resource, assuming action", uri);
+            handleRequest(chain, request, response, uri);
+        }
+    }
+
+    private void handleRequest(FilterChain chain, HttpServletRequest request, HttpServletResponse response, String uri) throws ServletException, IOException {
+        prepare.setEncodingAndLocale(request, response);
+        prepare.createActionContext(request, response);
+        prepare.assignDispatcherToThread();
+
+        HttpServletRequest wrappedRequest = prepare.wrapRequest(request);
+        try {
+            ActionMapping mapping = prepare.findActionMapping(wrappedRequest, response, true);
+            if (mapping == null) {
+                LOG.trace("Cannot find mapping for: {}, passing to other filters", uri);
+                chain.doFilter(request, response);
+            } else {
+                LOG.trace("Found mapping: {} for: {}", mapping, uri);
+                execute.executeAction(wrappedRequest, response, mapping);
+            }
+        } finally {
+            prepare.cleanupWrappedRequest(wrappedRequest);
+        }
+    }
+
+    @Override
     public void destroy() {
         prepare.cleanupDispatcher();
     }

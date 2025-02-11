@@ -25,10 +25,10 @@ import org.apache.struts2.tiles.annotation.TilesDefinition;
 import org.apache.struts2.tiles.annotation.TilesDefinitions;
 import org.apache.struts2.tiles.annotation.TilesPutAttribute;
 import org.apache.struts2.tiles.annotation.TilesPutListAttribute;
-import org.apache.tiles.Attribute;
-import org.apache.tiles.Definition;
-import org.apache.tiles.Expression;
-import org.apache.tiles.ListAttribute;
+import org.apache.tiles.api.Attribute;
+import org.apache.tiles.api.Definition;
+import org.apache.tiles.api.Expression;
+import org.apache.tiles.api.ListAttribute;
 
 /**
  * Processes tiles annotations to create {@link Definition}s and
@@ -54,14 +54,14 @@ public class StrutsTilesAnnotationProcessor {
      * @return {@link TilesDefinition}
      */
     public TilesDefinition findAnnotation(Object action, String tileName) {
-        Class<? extends Object> clazz = action.getClass();
+        Class<?> clazz = action.getClass();
         TilesDefinition tilesDefinition = clazz.getAnnotation(TilesDefinition.class);
         TilesDefinitions tilesDefinitions = clazz.getAnnotation(TilesDefinitions.class);
 
         if (tilesDefinition == null && tilesDefinitions != null) {
             if (!StringUtils.isEmpty(tileName)) {
                 for (TilesDefinition i : tilesDefinitions.value()) {
-                    if (i.name() != null && i.name().equals(tileName)) {
+                    if (i.name().equals(tileName)) {
                         tilesDefinition = i;
                         break;
                     }
@@ -123,7 +123,7 @@ public class StrutsTilesAnnotationProcessor {
         String templateType = getValueOrNull(tilesDef.templateType());
         if (templateType != null) {
             attribute.setRenderer(templateType);
-        } else if (getValueOrNull(tilesDef.extend()) != null && templateType == null) {
+        } else if (getValueOrNull(tilesDef.extend()) != null) {
             attribute.setRenderer(null);
         }
         return attribute;

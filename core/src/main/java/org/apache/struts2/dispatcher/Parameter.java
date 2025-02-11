@@ -1,7 +1,28 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.struts2.dispatcher;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Objects;
 
 public interface Parameter {
 
@@ -37,27 +58,27 @@ public interface Parameter {
         @Override
         public String getValue() {
             String[] values = toStringArray();
-            return (values != null && values.length > 0) ? values[0] : null;
+            return values.length > 0 ? values[0] : null;
         }
 
         private String[] toStringArray() {
-            if (value != null && value.getClass().isArray()) {
+            if (value == null) {
+                LOG.trace("The value is null, empty array of string will be returned!");
+                return new String[]{};
+            } else if (value.getClass().isArray()) {
                 LOG.trace("Converting value {} to array of strings", value);
 
                 Object[] values = (Object[]) value;
                 String[] strValues = new String[values.length];
                 int i = 0;
                 for (Object v : values) {
-                    strValues[i] = String.valueOf(v);
+                    strValues[i] = Objects.toString(v, null);
                     i++;
                 }
                 return strValues;
-            } else if (value != null) {
-                LOG.trace("Converting value {} to simple string", value);
-                return new String[]{ String.valueOf(value) };
             } else {
-                LOG.trace("The value is null, empty array of string will be returned!");
-                return new String[]{};
+                LOG.trace("Converting value {} to simple string", value);
+                return new String[]{ value.toString() };
             }
         }
 
@@ -80,13 +101,32 @@ public interface Parameter {
         public Object getObject() {
             return value;
         }
+
+        @Override
+        public String toString() {
+            return StringEscapeUtils.escapeHtml4(getValue());
+        }
     }
 
-    class EmptyHttpParameter implements Parameter {
+    class File extends Request {
 
-        private String name;
+        public File(String name, Object value) {
+            super(name, value);
+        }
 
-        public EmptyHttpParameter(String name) {
+        @Override
+        public String toString() {
+            return "File{" +
+                    "name='" + getName() + '\'' +
+                    '}';
+        }
+    }
+
+    class Empty implements Parameter {
+
+        private final String name;
+
+        public Empty(String name) {
             this.name = name;
         }
 
@@ -118,6 +158,25 @@ public interface Parameter {
         @Override
         public Object getObject() {
             return null;
+        }
+
+        @Override
+        public String toString() {
+            return "Empty{" +
+                    "name='" + name + '\'' +
+                    '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Empty empty)) return false;
+            return Objects.equals(name, empty.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
         }
     }
 

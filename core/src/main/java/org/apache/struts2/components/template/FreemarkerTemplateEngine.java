@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,29 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components.template;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.util.ClassLoaderUtil;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.util.ClassLoaderUtil;
+import org.apache.struts2.util.ValueStack;
 import freemarker.core.ParseException;
 import freemarker.template.Configuration;
 import freemarker.template.SimpleHash;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.views.freemarker.FreemarkerManager;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Freemarker based template engine.
@@ -51,7 +46,7 @@ public class FreemarkerTemplateEngine extends BaseTemplateEngine {
 
     static {
         try {
-            bodyContent = ClassLoaderUtil.loadClass("javax.servlet.jsp.tagext.BodyContent",
+            bodyContent = ClassLoaderUtil.loadClass("jakarta.servlet.jsp.tagext.BodyContent",
                     FreemarkerTemplateEngine.class);
         } catch (ClassNotFoundException e) {
             // this is OK -- this just means JSP isn't even being used here, which is perfectly fine.
@@ -67,14 +62,14 @@ public class FreemarkerTemplateEngine extends BaseTemplateEngine {
     public void setFreemarkerManager(FreemarkerManager mgr) {
         this.freemarkerManager = mgr;
     }
-    
+
     public void renderTemplate(TemplateRenderingContext templateContext) throws Exception {
     	// get the various items required from the stack
         ValueStack stack = templateContext.getStack();
-        Map context = stack.getContext();
-        ServletContext servletContext = (ServletContext) context.get(ServletActionContext.SERVLET_CONTEXT);
-        HttpServletRequest req = (HttpServletRequest) context.get(ServletActionContext.HTTP_REQUEST);
-        HttpServletResponse res = (HttpServletResponse) context.get(ServletActionContext.HTTP_RESPONSE);
+        ActionContext context = stack.getActionContext();
+        ServletContext servletContext = context.getServletContext();
+        HttpServletRequest req = context.getServletRequest();
+        HttpServletResponse res = context.getServletResponse();
 
         // prepare freemarker
         Configuration config = freemarkerManager.getConfiguration(servletContext);
@@ -124,6 +119,10 @@ public class FreemarkerTemplateEngine extends BaseTemplateEngine {
         ActionInvocation ai = ActionContext.getContext().getActionInvocation();
 
         Object action = (ai == null) ? null : ai.getAction();
+        if (action == null) {
+            LOG.warn("Rendering tag {} out of Action scope, accessing directly JSPs is not recommended! " +
+                    "Please read https://struts.apache.org/security/#never-expose-jsp-files-directly", templateName);
+        }
         SimpleHash model = freemarkerManager.buildTemplateModel(stack, action, servletContext, req, res, config.getObjectWrapper());
 
         model.put("tag", templateContext.getTag());
@@ -134,7 +133,7 @@ public class FreemarkerTemplateEngine extends BaseTemplateEngine {
         Writer writer = templateContext.getWriter();
         final Writer wrapped = writer;
         writer = new Writer() {
-            public void write(char cbuf[], int off, int len) throws IOException {
+            public void write(char[] cbuf, int off, int len) throws IOException {
                 wrapped.write(cbuf, off, len);
             }
 
@@ -147,10 +146,12 @@ public class FreemarkerTemplateEngine extends BaseTemplateEngine {
             }
         };
 
+        LOG.debug("Push tag on top of the stack");
+        stack.push(templateContext.getTag());
         try {
-            stack.push(templateContext.getTag());
             template.process(model, writer);
         } finally {
+            LOG.debug("Removes tag from top of the stack");
             stack.pop();
         }
     }

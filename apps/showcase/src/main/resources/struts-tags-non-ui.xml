@@ -1,14 +1,34 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-->
 <!DOCTYPE struts PUBLIC
-	"-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
-	"http://struts.apache.org/dtds/struts-2.5.dtd">
-	
+	"-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+	"https://struts.apache.org/dtds/struts-6.0.dtd">
+
 <struts>
-	
+
 	<!-- ================================== -->
 	<!-- === Package for ActionTag Demo === -->
 	<!-- ================================== -->
-	
+
 	<package name="actionTag" extends="struts-default" namespace="/tags/non-ui/actionTag">
 		<action name="showActionTagDemo" class="org.apache.struts2.showcase.tag.nonui.actiontag.ActionTagDemo" method="show">
 			<result>/WEB-INF/tags/non-ui/actionTag/showActionTagDemo.jsp</result>
@@ -26,11 +46,11 @@
 			<result type="plainText">/WEB-INF/tags/non-ui/actionTag/showActionTagDemo.jsp</result>
 		</action>
 	</package>
-	
+
 	<!-- ==================================== -->
 	<!-- === Package for IteratorGeneratorTag Demo === -->
 	<!-- ==================================== -->
-	
+
 	<package name="iteratorGeneratorTag" extends="struts-default" namespace="/tags/non-ui/iteratorGeneratorTag">
 		<action name="showGeneratorTagDemo" class="org.apache.struts2.showcase.tag.nonui.iteratortag.IteratorGeneratorTagDemo" method="input">
 			<result>/WEB-INF/tags/non-ui/iteratorTag/showIteratorGeneratorTagDemo.jsp</result>
@@ -40,8 +60,8 @@
 			<result>/WEB-INF/tags/non-ui/iteratorTag/iteratorGeneratorTagDemoResult.jsp</result>
 		</action>
 	</package>
-	
-	
+
+
 	<!-- ===================================== -->
 	<!-- === Package for AppendIteratorTag Demo ===  -->
 	<!-- ========================================== -->
@@ -54,8 +74,8 @@
 			<result>/WEB-INF/tags/non-ui/iteratorTag/appendIteratorTagDemoResult.jsp</result>
 		</action>
 	</package>
-	
-	
+
+
 	<!-- ====================================== -->
 	<!-- === Package for MergeIteratorTag Demo === -->
 	<!-- ========================================= -->
@@ -68,7 +88,7 @@
 			<result>/WEB-INF/tags/non-ui/iteratorTag/mergeIteratorTagDemoResult.jsp</result>
 		</action>
 	</package>
-	
+
 	<!-- ============================================= -->
 	<!-- === Package for SubsetIteratorTag Demo === -->
 	<!-- =========================================== -->
@@ -81,14 +101,14 @@
 			<result>/WEB-INF/tags/non-ui/iteratorTag/subsetIteratorTagDemoResult.jsp</result>
 		</action>
 	</package>
-	
+
 	<!-- ========================================= -->
 	<!-- === Package for Action Prefix Example === -->
 	<!-- ========================================= -->
 	<package name="actionPrefix" extends="struts-default" namespace="/tags/non-ui/actionPrefix">
 		<action name="actionPrefixExampleUsingFreemarker">
 			<result type="freemarker">/WEB-INF/tags/non-ui/actionPrefix/actionPrefixExample.ftl</result>
-		</action>	
+		</action>
 		<action name="submit" class="org.apache.struts2.showcase.tag.nonui.actionPrefix.SubmitAction">
 			<result type="freemarker">/WEB-INF/tags/non-ui/actionPrefix/normalSubmit.ftl</result>
 		</action>
@@ -111,7 +131,7 @@
 			<result type="plainText">/WEB-INF/tags/non-ui/actionPrefix/actionPrefixExample.ftl</result>
 		</action>
 	</package>
-	
+
 	<!--  ========================================== -->
 	<!--  === Package for If Tag Test / Examples === -->
 	<!--  ========================================== -->
@@ -131,7 +151,7 @@
         <action name="date">
             <result>/WEB-INF/tags/non-ui/date.jsp</result>
         </action>
-        <action name="debugTagDemo">
+		<action name="debugTagDemo" class="org.apache.struts2.showcase.tag.nonui.debugtag.DebugTagAction">
             <result>/WEB-INF/tags/non-ui/debug.jsp</result>
         </action>
     </package>

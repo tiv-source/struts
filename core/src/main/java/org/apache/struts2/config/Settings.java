@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.config;
 
-import com.opensymphony.xwork2.util.location.Location;
+import org.apache.struts2.util.location.Location;
 
 import java.util.Iterator;
 
@@ -39,7 +36,7 @@ interface Settings {
     String get(String name);
 
     /**
-     * Returns {@link com.opensymphony.xwork2.util.location.Location} of given setting
+     * Returns {@link org.apache.struts2.util.location.Location} of given setting
      *
      * @param name Name of the setting to locate
      * @return The location  of the setting or null

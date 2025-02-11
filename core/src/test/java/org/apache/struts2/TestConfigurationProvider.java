@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,33 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2;
 
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionProxyFactory;
-import com.opensymphony.xwork2.DefaultActionProxyFactory;
-import com.opensymphony.xwork2.ObjectFactory;
-import com.opensymphony.xwork2.config.Configuration;
-import com.opensymphony.xwork2.config.ConfigurationException;
-import com.opensymphony.xwork2.config.ConfigurationProvider;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.config.entities.InterceptorMapping;
-import com.opensymphony.xwork2.config.entities.PackageConfig;
-import com.opensymphony.xwork2.config.entities.ResultConfig;
-import com.opensymphony.xwork2.inject.ContainerBuilder;
-import com.opensymphony.xwork2.interceptor.ParametersInterceptor;
-import com.opensymphony.xwork2.mock.MockResult;
-import com.opensymphony.xwork2.security.DefaultExcludedPatternsChecker;
-import com.opensymphony.xwork2.security.ExcludedPatternsChecker;
-import com.opensymphony.xwork2.util.location.LocatableProperties;
-import com.opensymphony.xwork2.validator.ValidationInterceptor;
-import org.apache.struts2.result.ServletDispatcherResult;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.config.Configuration;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.config.ConfigurationProvider;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.config.entities.InterceptorMapping;
+import org.apache.struts2.config.entities.PackageConfig;
+import org.apache.struts2.config.entities.ResultConfig;
+import org.apache.struts2.inject.ContainerBuilder;
+import org.apache.struts2.mock.MockResult;
+import org.apache.struts2.security.DefaultExcludedPatternsChecker;
+import org.apache.struts2.security.DefaultNotExcludedAcceptedPatternsChecker;
+import org.apache.struts2.security.ExcludedPatternsChecker;
+import org.apache.struts2.security.NotExcludedAcceptedPatternsChecker;
+import org.apache.struts2.util.location.LocatableProperties;
+import org.apache.struts2.validator.ValidationInterceptor;
 import org.apache.struts2.interceptor.TokenInterceptor;
 import org.apache.struts2.interceptor.TokenSessionStoreInterceptor;
+import org.apache.struts2.interceptor.parameter.ParametersInterceptor;
+import org.apache.struts2.result.ServletDispatcherResult;
 import org.apache.struts2.views.jsp.ui.DoubleValidationAction;
 
 import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -67,7 +64,7 @@ public class TestConfigurationProvider implements ConfigurationProvider {
      */
     public void destroy() {
     }
-    
+
     public void init(Configuration config) {
         this.configuration = config;
     }
@@ -77,7 +74,7 @@ public class TestConfigurationProvider implements ConfigurationProvider {
      */
     public void loadPackages() {
 
-        HashMap successParams = new HashMap();
+        Map<String, String> successParams = new HashMap<>();
         successParams.put("propertyName", "executionCount");
         successParams.put("expectedValue", "1");
 
@@ -152,9 +149,7 @@ public class TestConfigurationProvider implements ConfigurationProvider {
     }
 
     /**
-     * Tells whether the ConfigurationProvider should reload its configuration
-     *
-     * @return
+     * @return whether the ConfigurationProvider should reload its configuration
      */
     public boolean needsReload() {
         return false;
@@ -169,6 +164,9 @@ public class TestConfigurationProvider implements ConfigurationProvider {
         }
         if (!builder.contains(ExcludedPatternsChecker.class)) {
             builder.factory(ExcludedPatternsChecker.class, DefaultExcludedPatternsChecker.class);
+        }
+        if (!builder.contains(NotExcludedAcceptedPatternsChecker.class)) {
+            builder.factory(NotExcludedAcceptedPatternsChecker.class, DefaultNotExcludedAcceptedPatternsChecker.class);
         }
     }
 }

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
-import java.io.Writer;
-
+import org.apache.struts2.util.ValueStack;
+import org.apache.struts2.dispatcher.DispatcherConstants;
 import org.apache.struts2.views.annotations.StrutsTag;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import java.io.Writer;
 
 /**
  * <!-- START SNIPPET: javadoc -->
@@ -34,8 +31,7 @@ import com.opensymphony.xwork2.util.ValueStack;
  * complex expression and then simply reference that variable each time rather than the complex expression. This is
  * useful in both cases: when the complex expression takes time (performance improvement) or is hard to read (code
  * readability improvement).</p>
- * <p>If the tag is used with body content, the evaluation of the value parameter is omitted. Instead, the String to
- * which the body evaluates is set as value for the scoped variable.</p>
+ * <p>If the value parameter is omitted, the String to which the body evaluates is set as value for the scoped variable.</p>
  *
  * <p>The scopes available are as follows:</p>
  * <ul>
@@ -57,14 +53,11 @@ import com.opensymphony.xwork2.util.ValueStack;
  * <!-- START SNIPPET: params -->
  *
  * <ul>
- *
  * <li>var* (String): The name of the new variable that is assigned the value of <i>value</i></li>
- *
  * <li>value (Object): The value that is assigned to the variable named <i>name</i></li>
- *
  * <li>scope (String): The scope in which to assign the variable. Can be <b>application</b>, <b>session</b>,
  * <b>request</b>, <b>page</b>, or <b>action</b>. By default it is <b>action</b>.</li>
- *
+ * <li>Note: With the <b>action</b> scope, the variable is <em>also</em> assigned to the <b>page</b> scope.
  * </ul>
  *
  * <!-- END SNIPPET: params -->
@@ -82,24 +75,26 @@ import com.opensymphony.xwork2.util.ValueStack;
  * </pre>
  *
  */
-@StrutsTag(name="set", tldBodyContent="JSP", tldTagClass="org.apache.struts2.views.jsp.SetTag", description="Assigns a value to a variable in a specified scope")
+@StrutsTag(name="set", tldTagClass="org.apache.struts2.views.jsp.SetTag", description="Assigns a value to a variable in a specified scope")
 public class Set extends ContextBean {
     protected String scope;
     protected String value;
+    protected boolean trimBody = true;
 
     public Set(ValueStack stack) {
         super(stack);
     }
 
+    @Override
     public boolean end(Writer writer, String body) {
         ValueStack stack = getStack();
 
         Object o;
         if (value == null) {
-            if (body != null && !body.equals("")) {
-                o = body;
-            } else {
+            if (body == null) {
                 o = findValue("top");
+            } else {
+                o = body;
             }
         } else {
             o = findValue(value);
@@ -107,29 +102,32 @@ public class Set extends ContextBean {
 
         body="";
 
-        if ("application".equalsIgnoreCase(scope)) {
-            stack.setValue("#application['" + getVar() + "']", o);
-        } else if ("session".equalsIgnoreCase(scope)) {
-            stack.setValue("#session['" + getVar() + "']", o);
-        } else if ("request".equalsIgnoreCase(scope)) {
-            stack.setValue("#request['" + getVar() + "']", o);
-        } else if ("page".equalsIgnoreCase(scope)) {
-            stack.setValue("#attr['" + getVar() + "']", o, false);
+        if (DispatcherConstants.APPLICATION.equalsIgnoreCase(scope)) {
+            stack.setValue(String.format("#application[\"%s\"]", getVar()), o);
+        } else if (DispatcherConstants.SESSION.equalsIgnoreCase(scope)) {
+            stack.setValue(String.format("#session[\"%s\"]", getVar()), o);
+        } else if (DispatcherConstants.REQUEST.equalsIgnoreCase(scope)) {
+            stack.setValue(String.format("#request[\"%s\"]", getVar()), o);
+        } else if (DispatcherConstants.PAGE.equalsIgnoreCase(scope)) {
+            stack.setValue(String.format("#attr[\"%s\"]", getVar()), o, false);
         } else {
-            stack.getContext().put(getVar(), o);
-            stack.setValue("#attr['" + getVar() + "']", o, false);
+            // Default scope is action. Note: The action scope handling also adds the var to the page scope.
+            putInContext(o);
+            stack.setValue(String.format("#attr[\"%s\"]", getVar()), o, false);
         }
 
         return super.end(writer, body);
     }
 
-    @StrutsTagAttribute(required=true, description="Name used to reference the value pushed into the Value Stack")
+    @StrutsTagAttribute(required=true, description="Name used to reference the value pushed into the Value Stack (default scope: action," +
+                "<em>override</em> with the scope attribute).")
+    @Override
     public void setVar(String var) {
        super.setVar(var);
     }
 
     @StrutsTagAttribute(description="The scope in which to assign the variable. Can be <b>application</b>" +
-                ", <b>session</b>, <b>request</b>, <b>page</b>, or <b>action</b>.", defaultValue="action")
+                ", <b>session</b>, <b>request</b>, <b>page</b>, or <b>action</b> (action scope <em>also</em> adds it to the page scope).", defaultValue="action")
     public void setScope(String scope) {
         this.scope = scope;
     }
@@ -137,6 +135,11 @@ public class Set extends ContextBean {
     @StrutsTagAttribute(description="The value that is assigned to the variable named <i>name</i>")
     public void setValue(String value) {
         this.value = value;
+    }
+
+    @StrutsTagAttribute(description="Set to false to prevent the default whitespace-trim of this tag's body content", type="Boolean", defaultValue="true")
+    public void setTrimBody(boolean trimBody) {
+        this.trimBody = trimBody;
     }
 
     @Override

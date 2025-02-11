@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.result;
 
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.util.reflection.ReflectionExceptionHandler;
+import org.apache.struts2.ActionInvocation;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
+import org.apache.struts2.util.reflection.ReflectionExceptionHandler;
 
-import java.util.Arrays;
+import java.io.Serial;
 import java.util.List;
 
 /**
@@ -123,8 +120,9 @@ import java.util.List;
  *
  * @see ActionMapper
  */
-public class ServletActionRedirectResult extends ServletRedirectResult implements ReflectionExceptionHandler {
+public class ServletActionRedirectResult extends ServletRedirectResult implements ReflectionExceptionHandler, Redirectable {
 
+    @Serial
     private static final long serialVersionUID = -9042425229314584066L;
 
     /* The default parameter */
@@ -158,10 +156,15 @@ public class ServletActionRedirectResult extends ServletRedirectResult implement
     }
 
     /**
-     * @see com.opensymphony.xwork2.Result#execute(com.opensymphony.xwork2.ActionInvocation)
+     * @see Result#execute(org.apache.struts2.ActionInvocation)
      */
     public void execute(ActionInvocation invocation) throws Exception {
+        if (invocation == null) {
+            throw new IllegalArgumentException("Invocation cannot be null!");
+        }
+
         actionName = conditionalParse(actionName, invocation);
+        parseLocation = false;
         if (namespace == null) {
             namespace = invocation.getProxy().getNamespace();
         } else {
@@ -208,7 +211,7 @@ public class ServletActionRedirectResult extends ServletRedirectResult implement
     }
 
     protected List<String> getProhibitedResultParams() {
-        return Arrays.asList(
+        return List.of(
                 DEFAULT_PARAM,
                 "namespace",
                 "method",

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,32 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.util.ValueStack;
-import com.opensymphony.xwork2.util.reflection.ReflectionProvider;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import java.io.Writer;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.struts2.views.annotations.StrutsTag;
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.ognl.ThreadAllowlist;
+import org.apache.struts2.util.CompoundRoot;
+import org.apache.struts2.util.ValueStack;
+import org.apache.struts2.util.reflection.ReflectionProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.StrutsException;
+import org.apache.struts2.dispatcher.PrepareOperations;
+import org.apache.struts2.views.annotations.StrutsTag;
+
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 @StrutsTag(name="debug", tldTagClass="org.apache.struts2.views.jsp.ui.DebugTag",
-        description="Prints debugging information")
+        description="Prints debugging information (Only if 'struts.devMode' is enabled)")
 public class Debug extends UIBean {
     public static final String TEMPLATE = "debug";
-    
+
     protected ReflectionProvider reflectionProvider;
 
-    
+    private ThreadAllowlist threadAllowlist;
 
     public Debug(ValueStack stack, HttpServletRequest request, HttpServletResponse response) {
         super(stack, request, response);
@@ -53,7 +53,12 @@ public class Debug extends UIBean {
     public void setReflectionProvider(ReflectionProvider prov) {
         this.reflectionProvider = prov;
     }
-    
+
+    @Inject
+    public void setThreadAllowlist(ThreadAllowlist threadAllowlist) {
+        this.threadAllowlist = threadAllowlist;
+    }
+
     protected String getDefaultTemplate() {
         return TEMPLATE;
     }
@@ -61,42 +66,73 @@ public class Debug extends UIBean {
     public boolean start(Writer writer) {
         boolean result = super.start(writer);
 
-        ValueStack stack = getStack();
-        Iterator iter = stack.getRoot().iterator();
-        List stackValues = new ArrayList(stack.getRoot().size());
-        while (iter.hasNext()) {
-            Object o = iter.next();
-            Map values;
-            try {
-                values = reflectionProvider.getBeanMap(o);
-            } catch (Exception e) {
-                throw new StrutsException("Caught an exception while getting the property values of " + o, e);
+        if (showDebug()) {
+            ValueStack stack = getStack();
+            allowList(stack.getRoot());
+
+            Iterator<Object> iter = stack.getRoot().iterator();
+            List<Object> stackValues = new ArrayList<>(stack.getRoot().size());
+            while (iter.hasNext()) {
+                Object o = iter.next();
+                Map<String, Object> values;
+                try {
+                    values = reflectionProvider.getBeanMap(o);
+                } catch (Exception e) {
+                    throw new StrutsException("Caught an exception while getting the property values of " + o, e);
+                }
+                allowListClass(o);
+                stackValues.add(new DebugMapEntry(o.getClass().getName(), values));
             }
-            stackValues.add(new DebugMapEntry(o.getClass().getName(), values));
+
+            addParameter("stackValues", stackValues);
         }
-
-        addParameter("stackValues", stackValues);
-
         return result;
     }
 
-    private static class DebugMapEntry implements Map.Entry {
-        private Object key;
+    private void allowList(CompoundRoot root) {
+        root.forEach(this::allowListClass);
+    }
+
+    private void allowListClass(Object o) {
+        threadAllowlist.allowClass(o.getClass());
+        ClassUtils.getAllSuperclasses(o.getClass()).forEach(threadAllowlist::allowClass);
+        ClassUtils.getAllInterfaces(o.getClass()).forEach(threadAllowlist::allowClass);
+    }
+
+    @Override
+    public boolean end(Writer writer, String body) {
+        if (showDebug()) {
+            return super.end(writer, body);
+        } else {
+            popComponentStack();
+            return false;
+        }
+    }
+
+    protected boolean showDebug() {
+        return (devMode || Boolean.TRUE == PrepareOperations.getDevModeOverride());
+    }
+
+    private static class DebugMapEntry implements Map.Entry<String, Object> {
+        private final String key;
         private Object value;
 
-        DebugMapEntry(Object key, Object value) {
+        DebugMapEntry(String key, Object value) {
             this.key = key;
             this.value = value;
         }
 
-        public Object getKey() {
+        @Override
+        public String getKey() {
             return key;
         }
 
+        @Override
         public Object getValue() {
             return value;
         }
 
+        @Override
         public Object setValue(Object newVal) {
             Object oldVal = value;
             value = newVal;

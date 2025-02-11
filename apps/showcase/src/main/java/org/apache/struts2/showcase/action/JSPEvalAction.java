@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,11 +18,16 @@
  */
 package org.apache.struts2.showcase.action;
 
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.interceptor.annotations.After;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.interceptor.annotations.After;
 import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -64,6 +67,7 @@ public class JSPEvalAction extends ExampleAction {
 		}
 	}
 
+	@StrutsParameter
 	public void setJsp(String jsp) {
 		this.jsp = jsp;
 	}

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,17 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.StrutsConstants;
 import org.apache.struts2.views.annotations.StrutsTag;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.Writer;
 
 /**
@@ -109,12 +106,12 @@ import java.io.Writer;
 @StrutsTag(name="url", tldTagClass="org.apache.struts2.views.jsp.URLTag", description="This tag is used to create a URL")
 public class URL extends ContextBean {
 
-    private UrlProvider urlProvider;
+    private final UrlProvider urlProvider;
     private UrlRenderer urlRenderer;
 
     public URL(ValueStack stack, HttpServletRequest req, HttpServletResponse res) {
         super(stack);
-        urlProvider = new ComponentUrlProvider(this, this.parameters);
+        urlProvider = new ComponentUrlProvider(this, this.attributes);
         urlProvider.setHttpServletRequest(req);
         urlProvider.setHttpServletResponse(res);
     }

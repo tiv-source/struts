@@ -1,6 +1,4 @@
 /*
- * $Id: DefaultActionSupport.java 651946 2008-04-27 13:41:38Z apetrelli $
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,17 +19,16 @@
 package org.apache.struts2.dispatcher.servlet;
 
 import org.apache.struts2.dispatcher.Dispatcher;
-import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.dispatcher.ExecuteOperations;
 import org.apache.struts2.dispatcher.InitOperations;
 import org.apache.struts2.dispatcher.PrepareOperations;
-import org.apache.struts2.dispatcher.servlet.ServletHostConfig;
+import org.apache.struts2.dispatcher.mapper.ActionMapping;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -51,7 +48,6 @@ public class StrutsServlet extends HttpServlet {
         Dispatcher dispatcher = null;
         try {
             ServletHostConfig config = new ServletHostConfig(filterConfig);
-            init.initLogging(config);
             dispatcher = init.initDispatcher(config);
             init.initStaticContentLoader(config, dispatcher);
 

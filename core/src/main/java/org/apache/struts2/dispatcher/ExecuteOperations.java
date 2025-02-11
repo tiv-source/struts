@@ -1,6 +1,4 @@
 /*
- * $Id: DefaultActionSupport.java 651946 2008-04-27 13:41:38Z apetrelli $
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,12 +18,12 @@
  */
 package org.apache.struts2.dispatcher;
 
-import org.apache.struts2.dispatcher.mapper.ActionMapping;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.RequestUtils;
+import org.apache.struts2.dispatcher.mapper.ActionMapping;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -33,7 +31,7 @@ import java.io.IOException;
  */
 public class ExecuteOperations {
 
-    private Dispatcher dispatcher;
+    private final Dispatcher dispatcher;
 
     public ExecuteOperations(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -56,7 +54,7 @@ public class ExecuteOperations {
             resourcePath = request.getPathInfo();
         }
 
-        StaticContentLoader staticResourceLoader = dispatcher.getContainer().getInstance(StaticContentLoader.class);
+        StaticContentLoader staticResourceLoader = dispatcher.getStaticContentLoader();
         if (staticResourceLoader.canHandle(resourcePath)) {
             staticResourceLoader.findStaticResource(resourcePath, request, response);
             // The framework did its job here

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,18 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.util;
 
 import org.apache.struts2.util.IteratorFilterSupport.EnumerationIterator;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-
 
 /**
  * MakeIterator.
@@ -93,7 +89,7 @@ public class MakeIterator {
         } else if (value instanceof Enumeration) {
             iterator = new EnumerationIterator((Enumeration) value);
         } else {
-            iterator = Arrays.asList(value).iterator();
+            iterator = List.of(value).iterator();
         }
 
         return iterator;

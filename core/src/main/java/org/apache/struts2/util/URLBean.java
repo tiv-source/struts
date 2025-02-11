@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,22 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.util;
 
-import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.ActionContext;
 import org.apache.struts2.views.util.DefaultUrlHelper;
 import org.apache.struts2.views.util.UrlHelper;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
-
 
 /**
  * A bean that can generate a URL.
  *
+ * FIXME: remove?
  */
 public class URLBean {
 
@@ -51,7 +48,7 @@ public class URLBean {
 
     public void setRequest(HttpServletRequest request) {
         this.request = request;
-        urlHelper = ServletActionContext.getContext().getInstance(DefaultUrlHelper.class);
+        urlHelper = ActionContext.getContext().getInstance(DefaultUrlHelper.class);
     }
 
     public void setResponse(HttpServletResponse response) {
@@ -60,20 +57,10 @@ public class URLBean {
 
     public String getURL() {
         // all this trickier with maps is to reduce the number of objects created
-        Map<String, Object> fullParams = null;
-
-        if (params != null) {
-            fullParams = new HashMap<String, Object>();
-        }
+        Map<String, Object> fullParams = new HashMap<>();
 
         if (page == null) {
-            // No particular page requested, so go to "same page"
-            // Add query params to parameters
-            if (fullParams != null) {
-                fullParams.putAll(request.getParameterMap());
-            } else {
-                fullParams = request.getParameterMap();
-            }
+            fullParams.putAll(request.getParameterMap());
         }
 
         // added parameters override, just like in URLTag
@@ -86,7 +73,7 @@ public class URLBean {
 
     public URLBean addParameter(String name, Object value) {
         if (params == null) {
-            params = new HashMap<String, String>();
+            params = new HashMap<>();
         }
 
         if (value == null) {

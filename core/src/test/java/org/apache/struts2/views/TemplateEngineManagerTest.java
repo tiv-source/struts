@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views;
 
 import java.util.HashSet;
@@ -30,51 +27,43 @@ import org.apache.struts2.components.template.JspTemplateEngine;
 import org.apache.struts2.components.template.Template;
 import org.apache.struts2.components.template.TemplateEngine;
 import org.apache.struts2.components.template.TemplateEngineManager;
-import org.apache.struts2.components.template.VelocityTemplateEngine;
-import org.apache.struts2.dispatcher.mapper.CompositeActionMapper;
 
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
-import com.opensymphony.xwork2.inject.Container;
+import org.apache.struts2.inject.Container;
 
 /**
  * TemplateEngineManagerTest
  *
  */
 public class TemplateEngineManagerTest extends TestCase {
-    
+
     TemplateEngineManager mgr;
     Mock mockContainer;
-    
+
     public void setUp() throws Exception {
         mgr = new TemplateEngineManager();
         mockContainer = new Mock(Container.class);
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(TemplateEngine.class), C.eq("jsp")), new JspTemplateEngine());
-        mockContainer.matchAndReturn("getInstance", C.args(C.eq(TemplateEngine.class), C.eq("vm")), new VelocityTemplateEngine());
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(TemplateEngine.class), C.eq("ftl")), new FreemarkerTemplateEngine());
-        mockContainer.matchAndReturn("getInstanceNames", C.args(C.eq(TemplateEngine.class)), new HashSet() {{
+        mockContainer.matchAndReturn("getInstanceNames", C.args(C.eq(TemplateEngine.class)), new HashSet<String>() {{
             add("jsp");
             add("vm");
             add("ftl");
         }});
-        
+
         mgr.setContainer((Container)mockContainer.proxy());
         mgr.setDefaultTemplateType("jsp");
     }
-    
+
     public void testTemplateTypeFromTemplateNameAndDefaults() {
-        
         TemplateEngine engine = mgr.getTemplateEngine(new Template("/template", "simple", "foo"), null);
         assertTrue(engine instanceof JspTemplateEngine);
-        engine = mgr.getTemplateEngine(new Template("/template", "simple", "foo.vm"), null);
-        assertTrue(engine instanceof VelocityTemplateEngine);
     }
 
     public void testTemplateTypeOverrides() {
         TemplateEngine engine = mgr.getTemplateEngine(new Template("/template", "simple", "foo"), "ftl");
         assertTrue(engine instanceof FreemarkerTemplateEngine);
-        engine = mgr.getTemplateEngine(new Template("/template", "simple", "foo.vm"), "ftl");
-        assertTrue(engine instanceof VelocityTemplateEngine);
         engine = mgr.getTemplateEngine(new Template("/template", "simple", "foo.ftl"), "");
         assertTrue(engine instanceof FreemarkerTemplateEngine);
     }
@@ -84,7 +73,7 @@ public class TemplateEngineManagerTest extends TestCase {
         TemplateEngine engine = mgr.getTemplateEngine(new Template("/template", "simple", "foo"), null);
         Template template = new Template("/template", "simple", "foo." + TemplateEngineManager.DEFAULT_TEMPLATE_TYPE);
         TemplateEngine defaultTemplateEngine = mgr.getTemplateEngine(template, null);
-        assertTrue(engine.getClass().equals(defaultTemplateEngine.getClass()));
+        assertEquals(engine.getClass(), defaultTemplateEngine.getClass());
     }
 
     protected void tearDown() throws Exception {

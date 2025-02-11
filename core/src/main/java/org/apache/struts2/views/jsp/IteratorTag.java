@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,22 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
 import org.apache.struts2.components.Component;
 import org.apache.struts2.components.IteratorComponent;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
+import java.io.Serial;
 
 /**
  * @see IteratorComponent
  */
 public class IteratorTag extends ContextBeanTag {
 
+    @Serial
     private static final long serialVersionUID = -1827978135193581901L;
 
     protected String statusAttr;
@@ -42,10 +41,12 @@ public class IteratorTag extends ContextBeanTag {
     protected String end;
     protected String step;
 
+    @Override
     public Component getBean(ValueStack stack, HttpServletRequest req, HttpServletResponse res) {
         return new IteratorComponent(stack);
     }
 
+    @Override
     protected void populateParams() {
         super.populateParams();
 
@@ -77,11 +78,14 @@ public class IteratorTag extends ContextBeanTag {
         this.step = step;
     }
 
+    @Override
     public int doEndTag() throws JspException {
         component = null;
+        clearTagStateForTagPoolingServers();
         return EVAL_PAGE;
     }
 
+    @Override
     public int doAfterBody() throws JspException {
         boolean again = component.end(pageContext.getOut(), getBody());
 
@@ -98,5 +102,26 @@ public class IteratorTag extends ContextBeanTag {
             return SKIP_BODY;
         }
     }
+
+    /**
+     * Must declare the setter at the descendant Tag class level in order for the tag handler to locate the method.
+     */
+    @Override
+    public void setPerformClearTagStateForTagPoolingServers(boolean performClearTagStateForTagPoolingServers) {
+        super.setPerformClearTagStateForTagPoolingServers(performClearTagStateForTagPoolingServers);
+    }
+
+    @Override
+    protected void clearTagStateForTagPoolingServers() {
+       if (!getPerformClearTagStateForTagPoolingServers()) {
+            return;  // If flag is false (default setting), do not perform any state clearing.
+        }
+        super.clearTagStateForTagPoolingServers();
+        this.statusAttr = null;
+        this.value = null;
+        this.begin = null;
+        this.end = null;
+        this.step = null;
+     }
 
 }

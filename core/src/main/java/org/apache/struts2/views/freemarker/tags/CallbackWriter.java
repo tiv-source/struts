@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,23 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.freemarker.tags;
+
+import freemarker.template.TemplateModelException;
+import freemarker.template.TransformControl;
+import org.apache.struts2.components.Component;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import org.apache.struts2.components.Component;
-
-import freemarker.template.TemplateModelException;
-import freemarker.template.TransformControl;
-
 /**
  */
 public class CallbackWriter extends Writer implements TransformControl {
-    private Component bean;
-    private Writer writer;
+    private final Component bean;
+    private final Writer writer;
     private StringWriter body;
     private boolean afterBody = false;
 
@@ -47,12 +43,14 @@ public class CallbackWriter extends Writer implements TransformControl {
         }
     }
 
+    @Override
     public void close() throws IOException {
         if (bean.usesBody()) {
             body.close();
         }
     }
 
+    @Override
     public void flush() throws IOException {
         writer.flush();
 
@@ -61,7 +59,8 @@ public class CallbackWriter extends Writer implements TransformControl {
         }
     }
 
-    public void write(char cbuf[], int off, int len) throws IOException {
+    @Override
+    public void write(char[] cbuf, int off, int len) throws IOException {
         if (bean.usesBody() && !afterBody) {
             body.write(cbuf, off, len);
         } else {
@@ -69,6 +68,7 @@ public class CallbackWriter extends Writer implements TransformControl {
         }
     }
 
+    @Override
     public int onStart() throws TemplateModelException, IOException {
         boolean result = bean.start(this);
 
@@ -79,6 +79,7 @@ public class CallbackWriter extends Writer implements TransformControl {
         }
     }
 
+    @Override
     public int afterBody() throws TemplateModelException, IOException {
         afterBody = true;
         boolean result = bean.end(this, bean.usesBody() ? body.toString() : "");
@@ -90,6 +91,7 @@ public class CallbackWriter extends Writer implements TransformControl {
         }
     }
 
+    @Override
     public void onError(Throwable throwable) throws Throwable {
         throw throwable;
     }

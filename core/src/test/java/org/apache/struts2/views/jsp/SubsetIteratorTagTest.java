@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,18 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
+
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionSupport;
+import org.apache.struts2.util.SubsetIteratorFilter.Decider;
+import org.apache.struts2.views.jsp.iterator.SubsetIteratorTag;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.struts2.util.SubsetIteratorFilter.Decider;
-import org.apache.struts2.views.jsp.iterator.SubsetIteratorTag;
-
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionSupport;
 
 
 /**
@@ -54,6 +50,13 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
             assertEquals(subsetIterator.next(), new Integer(3));
             assertEquals(subsetIterator.next(), new Integer(4));
             assertEquals(subsetIterator.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
 
         { // Array as Source
@@ -70,6 +73,65 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
             assertEquals(subsetIterator.next(), new Integer(3));
             assertEquals(subsetIterator.next(), new Integer(4));
             assertEquals(subsetIterator.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+    }
+
+    public void testBasic_clearTagStateSet() throws Exception {
+        { // List as Source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myList");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer(1));
+            assertEquals(subsetIterator.next(), new Integer(2));
+            assertEquals(subsetIterator.next(), new Integer(3));
+            assertEquals(subsetIterator.next(), new Integer(4));
+            assertEquals(subsetIterator.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+
+        { // Array as Source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myArray");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer(1));
+            assertEquals(subsetIterator.next(), new Integer(2));
+            assertEquals(subsetIterator.next(), new Integer(3));
+            assertEquals(subsetIterator.next(), new Integer(4));
+            assertEquals(subsetIterator.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
     }
 
@@ -86,6 +148,13 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
 
             assertEquals(subsetIterator.next(), new Integer(4));
             assertEquals(subsetIterator.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
 
         { // Array as source
@@ -100,6 +169,61 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
 
             assertEquals(subsetIterator.next(), new Integer(4));
             assertEquals(subsetIterator.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+    }
+
+    public void testWithStartAttribute_clearTagStateSet() throws Exception {
+        { // List as source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myList");
+            tag.setStart("3");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer(4));
+            assertEquals(subsetIterator.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+
+        { // Array as source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myArray");
+            tag.setStart("3");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer(4));
+            assertEquals(subsetIterator.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
     }
 
@@ -117,6 +241,13 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
             assertEquals(subsetIterator.next(), new Integer(1));
             assertEquals(subsetIterator.next(), new Integer(2));
             assertEquals(subsetIterator.next(), new Integer(3));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
 
         { // array as source
@@ -132,6 +263,63 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
             assertEquals(subsetIterator.next(), new Integer(1));
             assertEquals(subsetIterator.next(), new Integer(2));
             assertEquals(subsetIterator.next(), new Integer(3));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+    }
+
+    public void testWithCountAttribute_clearTagStateSet() throws Exception {
+        { // List as source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myList");
+            tag.setCount("3");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer(1));
+            assertEquals(subsetIterator.next(), new Integer(2));
+            assertEquals(subsetIterator.next(), new Integer(3));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+
+        { // array as source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myArray");
+            tag.setCount("3");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer(1));
+            assertEquals(subsetIterator.next(), new Integer(2));
+            assertEquals(subsetIterator.next(), new Integer(3));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
     }
 
@@ -149,6 +337,13 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
 
             assertEquals(subsetIterator.next(), new Integer("4"));
             assertEquals(subsetIterator.next(), new Integer("5"));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
 
         {   // Array as source
@@ -164,6 +359,63 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
 
             assertEquals(subsetIterator.next(), new Integer("4"));
             assertEquals(subsetIterator.next(), new Integer("5"));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+    }
+
+    public void testWIthStartAndCountAttribute_clearTagStateSet() throws Exception {
+        { // List as source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myList");
+            tag.setStart("3");
+            tag.setCount("3");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer("4"));
+            assertEquals(subsetIterator.next(), new Integer("5"));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+
+        {   // Array as source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myArray");
+            tag.setStart("3");
+            tag.setCount("3");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer("4"));
+            assertEquals(subsetIterator.next(), new Integer("5"));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
     }
 
@@ -188,6 +440,13 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
             assertEquals(subsetIterator2.next(), new Integer(3));
             assertEquals(subsetIterator2.next(), new Integer(4));
             assertEquals(subsetIterator2.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
 
         {   // Array as source
@@ -210,6 +469,77 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
             assertEquals(subsetIterator2.next(), new Integer(3));
             assertEquals(subsetIterator2.next(), new Integer(4));
             assertEquals(subsetIterator2.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+    }
+
+    public void testWithId_clearTagStateSet() throws Exception {
+        {   // List as Source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myList");
+            tag.setVar("myPageContextId1");
+
+            tag.doStartTag();
+            Iterator subsetIterator1 = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            Iterator subsetIterator2 = (Iterator) pageContext.getAttribute("myPageContextId1");
+
+            assertNotNull(subsetIterator1);
+            assertNotNull(subsetIterator2);
+            assertEquals(subsetIterator1, subsetIterator2);
+            assertEquals(subsetIterator2.next(), new Integer(1));
+            assertEquals(subsetIterator2.next(), new Integer(2));
+            assertEquals(subsetIterator2.next(), new Integer(3));
+            assertEquals(subsetIterator2.next(), new Integer(4));
+            assertEquals(subsetIterator2.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+
+        {   // Array as source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myArray");
+            tag.setVar("myPageContextId2");
+
+            tag.doStartTag();
+            Iterator subsetIterator1 = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            Iterator subsetIterator2 = (Iterator) pageContext.getAttribute("myPageContextId2");
+
+            assertNotNull(subsetIterator1);
+            assertNotNull(subsetIterator2);
+            assertEquals(subsetIterator1, subsetIterator2);
+            assertEquals(subsetIterator2.next(), new Integer(1));
+            assertEquals(subsetIterator2.next(), new Integer(2));
+            assertEquals(subsetIterator2.next(), new Integer(3));
+            assertEquals(subsetIterator2.next(), new Integer(4));
+            assertEquals(subsetIterator2.next(), new Integer(5));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
     }
 
@@ -226,6 +556,13 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
 
             assertEquals(subsetIterator.next(), new Integer(2));
             assertEquals(subsetIterator.next(), new Integer(4));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
 
         {   // Array As source
@@ -240,20 +577,74 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
 
             assertEquals(subsetIterator.next(), new Integer(2));
             assertEquals(subsetIterator.next(), new Integer(4));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPageContext(pageContext);
+            assertFalse("Tag state after doEndTag() under default tag clear state is equal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
         }
     }
 
+    public void testWithDecider_clearTagStateSet() throws Exception {
+        {   // List as source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myList");
+            tag.setDecider("myDecider");
 
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
 
+            assertEquals(subsetIterator.next(), new Integer(2));
+            assertEquals(subsetIterator.next(), new Integer(4));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+
+        {   // Array As source
+            SubsetIteratorTag tag = new SubsetIteratorTag();
+            tag.setPerformClearTagStateForTagPoolingServers(true);  // Explicitly request tag state clearing.
+            tag.setPageContext(pageContext);
+            tag.setSource("myList");
+            tag.setDecider("myDecider");
+
+            tag.doStartTag();
+            Iterator subsetIterator = (Iterator) stack.findValue("top");
+            tag.doEndTag();
+
+            assertEquals(subsetIterator.next(), new Integer(2));
+            assertEquals(subsetIterator.next(), new Integer(4));
+
+            // Basic sanity check of clearTagStateForTagPoolingServers() behaviour for Struts Tags after doEndTag().
+            SubsetIteratorTag freshTag = new SubsetIteratorTag();
+            freshTag.setPerformClearTagStateForTagPoolingServers(true);
+            freshTag.setPageContext(pageContext);
+            assertTrue("Tag state after doEndTag() and explicit tag state clearing is inequal to new Tag with pageContext/parent set.  " +
+                    "May indicate that clearTagStateForTagPoolingServers() calls are not working properly.",
+                    strutsBodyTagsAreReflectionEqual(tag, freshTag));
+        }
+    }
+
+    @Override
     public Action getAction() {
         return new ActionSupport() {
             public List getMyList() {
                 List l = new ArrayList();
-                l.add(new Integer(1));
-                l.add(new Integer(2));
-                l.add(new Integer(3));
-                l.add(new Integer(4));
-                l.add(new Integer(5));
+                l.add(1);
+                l.add(2);
+                l.add(3);
+                l.add(4);
+                l.add(5);
                 return l;
             }
 
@@ -268,11 +659,9 @@ public class SubsetIteratorTagTest extends AbstractTagTest {
             }
 
             public Decider getMyDecider() {
-                return new Decider() {
-                    public boolean decide(Object element) throws Exception {
-                        int integer = ((Integer)element).intValue();
-                        return (((integer % 2) == 0)?true:false);
-                    }
+                return element -> {
+                    int integer = (Integer) element;
+                    return integer % 2 == 0;
                 };
             }
         };

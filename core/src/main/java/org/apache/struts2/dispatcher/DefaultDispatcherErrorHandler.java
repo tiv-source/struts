@@ -1,9 +1,31 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.struts2.dispatcher;
 
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.util.location.Location;
-import com.opensymphony.xwork2.util.location.LocationUtils;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.util.location.Location;
+import org.apache.struts2.util.location.LocationUtils;
 import freemarker.template.Template;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,9 +33,6 @@ import org.apache.struts2.StrutsConstants;
 import org.apache.struts2.StrutsException;
 import org.apache.struts2.views.freemarker.FreemarkerManager;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -23,7 +42,7 @@ import java.util.List;
 
 /**
  * Default implementation of {@link org.apache.struts2.dispatcher.DispatcherErrorHandler}
- * which sends Error Report in devMode or {@link javax.servlet.http.HttpServletResponse#sendError} otherwise.
+ * which sends Error Report in devMode or {@link jakarta.servlet.http.HttpServletResponse#sendError} otherwise.
  */
 public class DefaultDispatcherErrorHandler implements DispatcherErrorHandler {
 
@@ -66,31 +85,34 @@ public class DefaultDispatcherErrorHandler implements DispatcherErrorHandler {
             // WW-1977: Only put errors in the request when code is a 500 error
             if (code == HttpServletResponse.SC_INTERNAL_SERVER_ERROR) {
                 // WW-4103: Only logs error when application error occurred, not Struts error
-                LOG.error("Exception occurred during processing request: {}", e, e.getMessage());
+                LOG.error("Exception occurred during processing request: {}", e.getMessage(), e);
                 // send a http error response to use the servlet defined error handler
                 // make the exception available to the web.xml defined error page
-                request.setAttribute("javax.servlet.error.exception", e);
+                request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, e);
 
                 // for compatibility
-                request.setAttribute("javax.servlet.jsp.jspException", e);
+                request.setAttribute("jakarta.servlet.jsp.jspException", e);
             }
 
             // send the error response
             response.sendError(code, e.getMessage());
         } catch (IOException e1) {
             // we're already sending an error, not much else we can do if more stuff breaks
+            LOG.warn("Unable to send error response, code: {};", code, e1);
+        } catch (IllegalStateException ise) {
+            // Log illegalstate instead of passing unrecoverable exception to calling thread
+            LOG.warn("Unable to send error response, code: {}; isCommited: {};", code, response.isCommitted(), ise);
         }
     }
 
     protected void handleErrorInDevMode(HttpServletResponse response, int code, Exception e) {
-        LOG.debug("Exception occurred during processing request: {}", e, e.getMessage());
+        LOG.debug("Exception occurred during processing request: {}", e.getMessage(), e);
         try {
             List<Throwable> chain = new ArrayList<>();
             Throwable cur = e;
-            chain.add(cur);
-            while ((cur = cur.getCause()) != null) {
+            do {
                 chain.add(cur);
-            }
+            } while ((cur = cur.getCause()) != null);
 
             Writer writer = new StringWriter();
             template.process(createReportData(e, chain), writer);
@@ -104,6 +126,10 @@ public class DefaultDispatcherErrorHandler implements DispatcherErrorHandler {
                 response.sendError(code, "Unable to show problem report:\n" + exp + "\n\n" + LocationUtils.getLocation(exp));
             } catch (IOException ex) {
                 // we're already sending an error, not much else we can do if more stuff breaks
+                LOG.warn("Unable to send error response, code: {};", code, ex);
+            } catch (IllegalStateException ise) {
+                // Log illegalstate instead of passing unrecoverable exception to calling thread
+                LOG.warn("Unable to send error response, code: {}; isCommited: {};", code, response.isCommitted(), ise);
             }
         }
     }

@@ -1,6 +1,4 @@
 /*
- * $Id: DefaultActionSupport.java 651946 2008-04-27 13:41:38Z apetrelli $
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,32 +18,35 @@
  */
 package org.apache.struts2.dispatcher.filter;
 
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletContext;
+import org.apache.struts2.dispatcher.HostConfig;
 import org.apache.struts2.util.MakeIterator;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
 import java.util.Iterator;
-
-import org.apache.struts2.dispatcher.HostConfig;
 
 /**
  * Host configuration that wraps FilterConfig
  */
 public class FilterHostConfig implements HostConfig {
 
-    private FilterConfig config;
+    private final FilterConfig config;
 
     public FilterHostConfig(FilterConfig config) {
         this.config = config;
     }
+
+    @Override
     public String getInitParameter(String key) {
         return config.getInitParameter(key);
     }
 
+    @Override
     public Iterator<String> getInitParameterNames() {
         return MakeIterator.convert(config.getInitParameterNames());
     }
 
+    @Override
     public ServletContext getServletContext() {
         return config.getServletContext();
     }

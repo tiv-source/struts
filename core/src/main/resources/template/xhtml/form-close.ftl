@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,16 +18,16 @@
  * under the License.
  */
 -->
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/control-close.ftl" />
-<#include "/${parameters.templateDir}/simple/form-close.ftl" />
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/form-close-validate.ftl" />
-<#if parameters.focusElement??>
-<script type="text/javascript">
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/control-close.ftl" />
+<#include "/${attributes.templateDir}/simple/form-close.ftl" />
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/form-close-validate.ftl" />
+<#if attributes.focusElement??>
+<@s.script>
     StrutsUtils.addOnLoad(function() {
-        var element = document.getElementById("${parameters.focusElement?html}");
+        var element = document.getElementById("${attributes.focusElement?js_string}");
         if(element) {
             element.focus();
         }
     });
-</script>
+</@s.script>
 </#if>

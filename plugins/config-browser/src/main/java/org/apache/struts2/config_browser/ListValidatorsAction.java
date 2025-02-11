@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.config_browser;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionSupport;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.util.ClassLoaderUtil;
-import com.opensymphony.xwork2.validator.ActionValidatorManager;
-import com.opensymphony.xwork2.validator.Validator;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionSupport;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.util.ClassLoaderUtil;
+import org.apache.struts2.validator.ActionValidatorManager;
+import org.apache.struts2.validator.Validator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,23 +37,24 @@ import java.util.List;
  */
 public class ListValidatorsAction extends ActionSupport {
 
-    private static final long serialVersionUID = 1L;
+    private static final Logger LOG = LogManager.getLogger(ListValidatorsAction.class);
 
     private String clazz;
     private String context;
     List<Validator> validators = Collections.emptyList();
     private ActionValidatorManager actionValidatorManager;
 
-    
+
     @Inject
     public void setActionValidatorManager(ActionValidatorManager mgr) {
         this.actionValidatorManager = mgr;
     }
-    
+
     public String getClazz() {
         return clazz;
     }
 
+    @StrutsParameter
     public void setClazz(String clazz) {
         this.clazz = clazz;
     }
@@ -70,6 +71,7 @@ public class ListValidatorsAction extends ActionSupport {
         return context;
     }
 
+    @StrutsParameter
     public void setContext(String context) {
         this.context = context;
     }
@@ -78,6 +80,7 @@ public class ListValidatorsAction extends ActionSupport {
         return validators;
     }
 
+    @Override
     public String execute() throws Exception {
         loadValidators();
         return super.execute();

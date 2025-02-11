@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,11 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.util;
 
-import javax.servlet.jsp.JspWriter;
-import java.io.*;
+import jakarta.servlet.jsp.JspWriter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -31,7 +36,6 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 import java.util.LinkedList;
 
-
 /**
  * A speedy implementation of ByteArrayOutputStream. It's not synchronized, and it
  * does not copy buffers when it's expanded. There's also no copying of the internal buffer
@@ -39,13 +43,16 @@ import java.util.LinkedList;
  *
  */
 public class FastByteArrayOutputStream extends OutputStream {
+
+    private static final Logger LOG = LogManager.getLogger(FastByteArrayOutputStream.class);
+
     private static final int DEFAULT_BLOCK_SIZE = 8192;
 
     private LinkedList<byte[]> buffers;
-    private byte buffer[];
+    private byte[] buffer;
     private int index;
     private int size;
-    private int blockSize;
+    private final int blockSize;
     private boolean closed;
 
     public FastByteArrayOutputStream() {
@@ -148,7 +155,7 @@ public class FastByteArrayOutputStream extends OutputStream {
         // Append bytes to current buffer
         // Previous data maybe partially decoded, this part will appended to previous
         in.put(bytes, 0, length);
-        // To begin of data
+        // To begin processing of data
         in.flip();
         decodeAndWriteBuffered(writer, in, out, decoder, endOfInput);
     }
@@ -162,7 +169,7 @@ public class FastByteArrayOutputStream extends OutputStream {
             if (in.hasRemaining()) {
                 // Move remaining to top of buffer
                 in.compact();
-                if (result.isOverflow() && !result.isError() && !result.isMalformed()) {
+                if (result.isOverflow() && !result.isError()) {  // isError covers isMalformed and isUnmappable
                     // Not all buffer chars decoded, spin it again
                     // Set to begin
                     in.flip();
@@ -171,16 +178,24 @@ public class FastByteArrayOutputStream extends OutputStream {
                 // Clean up buffer
                 in.clear();
             }
-        } while (in.hasRemaining() && result.isOverflow() && !result.isError() && !result.isMalformed());
+        } while (in.hasRemaining() && result.isOverflow() && !result.isError());  // isError covers isMalformed and isUnmappable
+
+        if (result.isError()) {
+            if (LOG.isWarnEnabled()) {
+                // Provide a log warning when the decoding fails (prior to 2.5.19 it failed silently).
+                // Note: Set FastByteArrayOutputStream's Logger level to error or higher to suppress this log warning.
+                LOG.warn("Buffer decoding-in-to-out [{}] failed, coderResult [{}]", decoder.charset().name(), result.toString());
+            }
+        }
     }
 
     private static CoderResult decodeAndWrite(Writer writer, ByteBuffer in, CharBuffer out, CharsetDecoder decoder, boolean endOfInput) throws IOException {
         CoderResult result = decoder.decode(in, out, endOfInput);
-        // To begin of decoded data
+        // To begin processing of decoded data
         out.flip();
         // Output
         writer.write(out.toString());
-        // clear output to avoid infinitive loops, see WW-4383
+        // Clear output to avoid infinite loops, see WW-4383
         out.clear();
         return result;
     }
@@ -190,7 +205,7 @@ public class FastByteArrayOutputStream extends OutputStream {
     }
 
     public byte[] toByteArray() {
-        byte data[] = new byte[getSize()];
+        byte[] data = new byte[getSize()];
         int position = 0;
         if (buffers != null) {
             for (byte[] bytes : buffers) {
@@ -226,7 +241,7 @@ public class FastByteArrayOutputStream extends OutputStream {
         buffer[index++] = (byte) datum;
     }
 
-    public void write(byte data[], int offset, int length) throws IOException {
+    public void write(byte[] data, int offset, int length) throws IOException {
         if (data == null) {
             throw new NullPointerException();
         }

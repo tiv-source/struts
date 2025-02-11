@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,17 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp.ui;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.components.ActionMessage;
 import org.apache.struts2.components.Component;
-import org.apache.struts2.components.ActionError;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import java.io.Serial;
 
 /**
  * ActionMessage Tag.
@@ -36,14 +32,17 @@ import com.opensymphony.xwork2.util.ValueStack;
  */
 public class ActionMessageTag extends AbstractUITag {
 
+    @Serial
     private static final long serialVersionUID = 243396927554182506L;
 
     private boolean escape = true;
 
+    @Override
     public Component getBean(ValueStack stack, HttpServletRequest req, HttpServletResponse res) {
         return new ActionMessage(stack, req, res);
     }
 
+    @Override
      protected void populateParams() {
         super.populateParams();
 
@@ -54,4 +53,22 @@ public class ActionMessageTag extends AbstractUITag {
     public void setEscape(boolean escape) {
         this.escape = escape;
     }
+
+    /**
+     * Must declare the setter at the descendant Tag class level in order for the tag handler to locate the method.
+     */
+    @Override
+    public void setPerformClearTagStateForTagPoolingServers(boolean performClearTagStateForTagPoolingServers) {
+        super.setPerformClearTagStateForTagPoolingServers(performClearTagStateForTagPoolingServers);
+    }
+
+    @Override
+    protected void clearTagStateForTagPoolingServers() {
+       if (!getPerformClearTagStateForTagPoolingServers()) {
+            return;  // If flag is false (default setting), do not perform any state clearing.
+        }
+        super.clearTagStateForTagPoolingServers();
+        this.escape = true;
+     }
+
 }

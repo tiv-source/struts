@@ -38,10 +38,10 @@ public class HiddenTest extends AbstractTest {
 
 
         tag.evaluateParams();
-        map.putAll(tag.getParameters());
+        map.putAll(tag.getAttributes());
         theme.renderTag(getTagName(), context);
         String output = writer.getBuffer().toString();
-        String expected = s("<input name='name' type='hidden' value='val1' id='id1' class='class1' style='style1'></input>");
+        String expected = s("<input name='name' type='hidden' value='val1' disabled='disabled' id='id1' class='class1' style='style1'></input>");
         assertEquals(expected, output);
     }
 

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,25 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.config;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.config.ConfigurationException;
-import com.opensymphony.xwork2.config.providers.XmlConfigurationProvider;
-import com.opensymphony.xwork2.inject.ContainerBuilder;
-import com.opensymphony.xwork2.inject.Context;
-import com.opensymphony.xwork2.inject.Factory;
-import com.opensymphony.xwork2.util.location.LocatableProperties;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.config.providers.XmlConfigurationProvider;
+import org.apache.struts2.inject.ContainerBuilder;
+import org.apache.struts2.inject.Context;
+import org.apache.struts2.inject.Factory;
+import org.apache.struts2.util.location.LocatableProperties;
+import jakarta.servlet.ServletContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Override Xwork class so we can use an arbitrary config file
@@ -44,54 +44,66 @@ import java.util.*;
 public class StrutsXmlConfigurationProvider extends XmlConfigurationProvider {
 
     private static final Logger LOG = LogManager.getLogger(StrutsXmlConfigurationProvider.class);
+    private static final Map<String, String> STRUTS_DTD_MAPPINGS = Map.of(
+            "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN", "struts-2.0.dtd",
+            "-//Apache Software Foundation//DTD Struts Configuration 2.1//EN", "struts-2.1.dtd",
+            "-//Apache Software Foundation//DTD Struts Configuration 2.1.7//EN", "struts-2.1.7.dtd",
+            "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN", "struts-2.3.dtd",
+            "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN", "struts-2.5.dtd",
+            "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN", "struts-6.0.dtd",
+            "-//Apache Software Foundation//DTD Struts Configuration 6.5//EN", "struts-6.5.dtd");
+
     private File baseDir = null;
-    private String filename;
-    private String reloadKey;
-    private ServletContext servletContext;
+    private final String filename;
+    private final String reloadKey;
+    private final ServletContext servletContext;
 
     /**
-     * Constructs the configuration provider
-     *
-     * @param errorIfMissing If we should throw an exception if the file can't be found
+     * Constructs the Struts configuration provider using the default struts.xml and no ServletContext
      */
-    public StrutsXmlConfigurationProvider(boolean errorIfMissing) {
-        this("struts.xml", errorIfMissing, null);
+    public StrutsXmlConfigurationProvider() {
+        this("struts.xml", null);
     }
 
     /**
-     * Constructs the configuration provider
+     * Constructs the configuration provider based on the provided config file
+     *
+     * @param filename file with Struts configuration
+     */
+    public StrutsXmlConfigurationProvider(String filename) {
+        this(filename, null);
+    }
+
+    /**
+     * Constructs the Struts configuration provider
      *
      * @param filename The filename to look for
-     * @param errorIfMissing If we should throw an exception if the file can't be found
      * @param ctx Our ServletContext
      */
-    public StrutsXmlConfigurationProvider(String filename, boolean errorIfMissing, ServletContext ctx) {
-        super(filename, errorIfMissing);
+    public StrutsXmlConfigurationProvider(String filename, ServletContext ctx) {
+        super(filename);
         this.servletContext = ctx;
         this.filename = filename;
-        reloadKey = "configurationReload-"+filename;
-        Map<String,String> dtdMappings = new HashMap<String,String>(getDtdMappings());
-        dtdMappings.put("-//Apache Software Foundation//DTD Struts Configuration 2.0//EN", "struts-2.0.dtd");
-        dtdMappings.put("-//Apache Software Foundation//DTD Struts Configuration 2.1//EN", "struts-2.1.dtd");
-        dtdMappings.put("-//Apache Software Foundation//DTD Struts Configuration 2.1.7//EN", "struts-2.1.7.dtd");
-        dtdMappings.put("-//Apache Software Foundation//DTD Struts Configuration 2.3//EN", "struts-2.3.dtd");
-        dtdMappings.put("-//Apache Software Foundation//DTD Struts Configuration 2.5//EN", "struts-2.5.dtd");
-        setDtdMappings(dtdMappings);
+        this.reloadKey = "configurationReload-" + filename;
+        setDtdMappings(STRUTS_DTD_MAPPINGS);
         File file = new File(filename);
         if (file.getParent() != null) {
             this.baseDir = file.getParentFile();
         }
     }
-    
-    /* (non-Javadoc)
-     * @see com.opensymphony.xwork2.config.providers.XmlConfigurationProvider#register(com.opensymphony.xwork2.inject.ContainerBuilder, java.util.Properties)
-     */
+
     @Override
     public void register(ContainerBuilder containerBuilder, LocatableProperties props) throws ConfigurationException {
         if (servletContext != null && !containerBuilder.contains(ServletContext.class)) {
-            containerBuilder.factory(ServletContext.class, new Factory<ServletContext>() {
+            containerBuilder.factory(ServletContext.class, new Factory<>() {
+                @Override
                 public ServletContext create(Context context) throws Exception {
                     return servletContext;
+                }
+
+                @Override
+                public Class<? extends ServletContext> type() {
+                    return servletContext.getClass();
                 }
             });
         }
@@ -99,7 +111,7 @@ public class StrutsXmlConfigurationProvider extends XmlConfigurationProvider {
     }
 
     /* (non-Javadoc)
-     * @see com.opensymphony.xwork2.config.providers.XmlConfigurationProvider#init(com.opensymphony.xwork2.config.Configuration)
+     * @see org.apache.struts2.config.providers.XmlConfigurationProvider#init(org.apache.struts2.config.Configuration)
      */
     @Override
     public void loadPackages() {
@@ -112,7 +124,7 @@ public class StrutsXmlConfigurationProvider extends XmlConfigurationProvider {
      * Look for the configuration file on the classpath and in the file system
      *
      * @param fileName The file name to retrieve
-     * @see com.opensymphony.xwork2.config.providers.XmlConfigurationProvider#getConfigurationUrls
+     * @see org.apache.struts2.config.providers.XmlConfigurationProvider#getConfigurationUrls
      */
     @Override
     protected Iterator<URL> getConfigurationUrls(String fileName) throws IOException {
@@ -164,7 +176,7 @@ public class StrutsXmlConfigurationProvider extends XmlConfigurationProvider {
         }
 
     }
-    
+
     public String toString() {
         return ("Struts XML configuration provider ("+filename+")");
     }

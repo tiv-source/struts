@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,27 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.struts2.views.annotations.StrutsTagAttribute;
-import org.apache.struts2.dispatcher.mapper.ActionMapper;
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
-
-import com.opensymphony.xwork2.util.ValueStack;
-import com.opensymphony.xwork2.inject.Inject;
+import org.apache.struts2.views.annotations.StrutsTagAttribute;
 
 /**
  * FormButton.
  */
 public abstract class FormButton extends ClosingUIBean {
 
-    static final String BUTTONTYPE_INPUT = "input";
-    static final String BUTTONTYPE_BUTTON = "button";
-    static final String BUTTONTYPE_IMAGE = "image";
+    private static final String BUTTON_TYPE_INPUT = "input";
+    private static final String BUTTON_TYPE_BUTTON = "button";
+    private static final String BUTTON_TYPE_IMAGE = "image";
 
     protected String action;
     protected String method;
@@ -52,9 +45,8 @@ public abstract class FormButton extends ClosingUIBean {
     public void evaluateExtraParams() {
         super.evaluateExtraParams();
 
-        String submitType = BUTTONTYPE_INPUT;
-        if (type != null && (BUTTONTYPE_BUTTON.equalsIgnoreCase(type) || (supportsImageType() && BUTTONTYPE_IMAGE.equalsIgnoreCase(type))))
-        {
+        String submitType = BUTTON_TYPE_INPUT;
+        if (type != null && (BUTTON_TYPE_BUTTON.equalsIgnoreCase(type) || (supportsImageType() && BUTTON_TYPE_IMAGE.equalsIgnoreCase(type)))) {
             submitType = type;
         }
 
@@ -62,8 +54,8 @@ public abstract class FormButton extends ClosingUIBean {
 
         addParameter("type", submitType);
 
-        if (!BUTTONTYPE_INPUT.equals(submitType) && (label == null)) {
-            addParameter("label", getParameters().get("nameValue"));
+        if (!BUTTON_TYPE_INPUT.equals(submitType) && (label == null)) {
+            addParameter("label", getAttributes().get("nameValue"));
         }
 
         if (action != null || method != null) {
@@ -101,33 +93,33 @@ public abstract class FormButton extends ClosingUIBean {
      * </ol>
      */
     protected void populateComponentHtmlId(Form form) {
-        String _tmp_id = "";
+        String tmpId = "";
         if (id != null) {
             // this check is needed for backwards compatibility with 2.1.x
-        	_tmp_id = findStringIfAltSyntax(id);
-        }
-        else {
-            if (form != null && form.getParameters().get("id") != null) {
-                _tmp_id = _tmp_id + form.getParameters().get("id").toString() + "_";
+            tmpId = findString(id);
+        } else {
+            if (form != null && form.getAttributes().get("id") != null) {
+                tmpId = tmpId + form.getAttributes().get("id").toString() + "_";
             }
             if (name != null) {
-                _tmp_id = _tmp_id + escape(name);
-            } else if (action != null || method != null){
+                tmpId = tmpId + escape(findString(name));
+            } else if (action != null || method != null) {
                 if (action != null) {
-                    _tmp_id = _tmp_id + escape(action);
+                    tmpId = tmpId + escape(findString(action));
                 }
                 if (method != null) {
-                    _tmp_id = _tmp_id + "_" + escape(method);
+                    tmpId = tmpId + "_" + escape(findString(method));
                 }
             } else {
                 // if form is null, this component is used, without a form, i guess
                 // there's not much we could do then.
                 if (form != null) {
-                    _tmp_id = _tmp_id + form.getSequence();
+                    tmpId = tmpId + form.getSequence();
                 }
             }
         }
-        addParameter("id", _tmp_id);
+        addParameter("id", tmpId);
+        addParameter("escapedId", escape(tmpId));
     }
 
     /**
@@ -137,24 +129,19 @@ public abstract class FormButton extends ClosingUIBean {
      */
     protected abstract boolean supportsImageType();
 
-    @Inject
-    public void setActionMapper(ActionMapper mapper) {
-        this.actionMapper = mapper;
-    }
-
-    @StrutsTagAttribute(description="Set action attribute.")
+    @StrutsTagAttribute(description = "Set action attribute.")
     public void setAction(String action) {
         this.action = action;
     }
 
-    @StrutsTagAttribute(description="Set method attribute.")
+    @StrutsTagAttribute(description = "Set method attribute.")
     public void setMethod(String method) {
         this.method = method;
     }
 
 
-    @StrutsTagAttribute(description="The type of submit to use. Valid values are <i>input</i>, " +
-                "<i>button</i> and <i>image</i>.", defaultValue="input")
+    @StrutsTagAttribute(description = "The type of submit to use. Valid values are <i>input</i>, " +
+        "<i>button</i> and <i>image</i>.", defaultValue = "input")
     public void setType(String type) {
         this.type = type;
     }

@@ -1,32 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.struts2.interceptor;
 
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionSupport;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.config.entities.ResultConfig;
-import com.opensymphony.xwork2.mock.MockActionProxy;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.ActionSupport;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.config.entities.ResultConfig;
+import org.apache.struts2.mock.MockActionProxy;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.dispatcher.HttpParameters;
 import org.apache.struts2.result.ServletRedirectResult;
 import org.easymock.EasyMock;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.util.HashMap;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MessageStorePreResultListenerTest extends StrutsInternalTestCase {
 
-    public void testSessionWasInvalidated() throws Exception {
+    public void testSessionWasInvalidated() {
         // given
-        ActionContext actionContext = new ActionContext(new HashMap());
-        actionContext.put(ActionContext.PARAMETERS, new LinkedHashMap());
+        ActionContext actionContext = ActionContext.of()
+            .withParameters(HttpParameters.create().build())
+            .bind();
 
         ActionInvocation mockActionInvocation = EasyMock.createControl().createMock(ActionInvocation.class);
 
@@ -54,7 +73,8 @@ public class MessageStorePreResultListenerTest extends StrutsInternalTestCase {
 
         // when
         MessageStoreInterceptor msi = new MessageStoreInterceptor();
-        MessageStorePreResultListener listener = new MessageStorePreResultListener(msi);
+        MessageStorePreResultListener listener = new MessageStorePreResultListener();
+        listener.init(msi);
         listener.beforeResult(mockActionInvocation, Action.SUCCESS);
 
         // then
@@ -63,10 +83,11 @@ public class MessageStorePreResultListenerTest extends StrutsInternalTestCase {
         EasyMock.verify(mockedResponse);
     }
 
-    public void testResponseWasComitted() throws Exception {
+    public void testResponseWasComitted() {
         // given
-        ActionContext actionContext = new ActionContext(new HashMap());
-        actionContext.put(ActionContext.PARAMETERS, new LinkedHashMap());
+        ActionContext actionContext = ActionContext.of()
+            .withParameters(HttpParameters.create().build())
+            .bind();
 
         ActionInvocation mockActionInvocation = EasyMock.createControl().createMock(ActionInvocation.class);
 
@@ -86,7 +107,8 @@ public class MessageStorePreResultListenerTest extends StrutsInternalTestCase {
 
         // when
         MessageStoreInterceptor msi = new MessageStoreInterceptor();
-        MessageStorePreResultListener listener = new MessageStorePreResultListener(msi);
+        MessageStorePreResultListener listener = new MessageStorePreResultListener();
+        listener.init(msi);
         listener.beforeResult(mockActionInvocation, Action.SUCCESS);
 
         // then
@@ -94,13 +116,14 @@ public class MessageStorePreResultListenerTest extends StrutsInternalTestCase {
         EasyMock.verify(mockedResponse);
     }
 
-    public void testAutomatic() throws Exception {
+    public void testAutomatic() {
         MessageStoreInterceptor interceptor = new MessageStoreInterceptor();
         interceptor.setOperationMode(MessageStoreInterceptor.AUTOMATIC_MODE);
 
-        MessageStorePreResultListener listener = new MessageStorePreResultListener(interceptor);
+        MessageStorePreResultListener listener = new MessageStorePreResultListener();
+        listener.init(interceptor);
 
-        Map sessionMap = new LinkedHashMap();
+        Map<String, Object> sessionMap = new LinkedHashMap<>();
 
         ActionSupport action = new ActionSupport();
         action.addActionError("some action error 1");
@@ -110,9 +133,10 @@ public class MessageStorePreResultListenerTest extends StrutsInternalTestCase {
         action.addFieldError("field1", "some field error 1");
         action.addFieldError("field2", "some field error 2");
 
-        ActionContext actionContext = new ActionContext(new HashMap());
-        actionContext.setParameters(HttpParameters.createEmpty().build());
-        actionContext.put(ActionContext.SESSION, sessionMap);
+        ActionContext actionContext = ActionContext.of()
+            .withParameters(HttpParameters.create().build())
+            .withSession(sessionMap)
+            .bind();
 
         HttpSession mockedSession = EasyMock.createControl().createMock(HttpSession.class);
         HttpServletRequest mockedRequest = EasyMock.createControl().createMock(HttpServletRequest.class);
@@ -173,14 +197,15 @@ public class MessageStorePreResultListenerTest extends StrutsInternalTestCase {
         EasyMock.verify(mockActionInvocation);
     }
 
-    public void testStoreMessage() throws Exception {
+    public void testStoreMessage() {
         MessageStoreInterceptor interceptor = new MessageStoreInterceptor();
         interceptor.setAllowRequestParameterSwitch(true);
         interceptor.setOperationMode(MessageStoreInterceptor.STORE_MODE);
 
-        MessageStorePreResultListener listener = new MessageStorePreResultListener(interceptor);
+        MessageStorePreResultListener listener = new MessageStorePreResultListener();
+        listener.init(interceptor);
 
-        Map sessionMap = new LinkedHashMap();
+        Map<String, Object> sessionMap = new LinkedHashMap<>();
 
         ActionSupport action = new ActionSupport();
         action.addActionError("some action error 1");
@@ -190,9 +215,10 @@ public class MessageStorePreResultListenerTest extends StrutsInternalTestCase {
         action.addFieldError("field1", "some field error 1");
         action.addFieldError("field2", "some field error 2");
 
-        ActionContext actionContext = new ActionContext(new HashMap());
-        actionContext.setParameters(HttpParameters.createEmpty().build());
-        actionContext.setSession(sessionMap);
+        ActionContext actionContext = ActionContext.of()
+            .withParameters(HttpParameters.create().build())
+            .withSession(sessionMap)
+            .bind();
 
         HttpSession mockedSession = EasyMock.createControl().createMock(HttpSession.class);
         HttpServletRequest mockedRequest = EasyMock.createControl().createMock(HttpServletRequest.class);

@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,22 +22,22 @@
     Make sure element is always present. To be filled later via JS.
 -->
 <ul<#rt/>
-<#if parameters.id??>
- id="${parameters.id?html}"<#rt/>
-</#if>            
-<#if parameters.cssClass??>
- class="${parameters.cssClass?html}"<#rt/>
+<#if attributes.id??>
+ id="${attributes.id}"<#rt/>
+</#if>
+<#if attributes.cssClass??>
+ class="${attributes.cssClass}"<#rt/>
 <#else>
  class="errorMessage"<#rt/>
 </#if>
-<#if parameters.cssStyle??>
- style="${parameters.cssStyle?html}"<#rt/>
+<#if attributes.cssStyle??>
+ style="${attributes.cssStyle}"<#rt/>
 </#if>
 >
 <#if (actionErrors?? && actionErrors?size > 0)>
 	<#list actionErrors as error>
 		<#if error??>
-            <li><span><#if parameters.escape>${error!?html}<#else>${error!}</#if></span><#rt/></li><#rt/>
+            <li><span><#if attributes.escape>${error!}<#else>${error!}</#if></span><#rt/></li><#rt/>
         </#if>
 	</#list>
 </#if>

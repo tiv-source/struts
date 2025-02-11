@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,31 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.components.Component;
 import org.apache.struts2.components.Param;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.Serial;
 
 /**
  * @see Param
  */
 public class ParamTag extends ComponentTagSupport {
 
+    @Serial
     private static final long serialVersionUID = -968332732207156408L;
 
     protected String name;
     protected String value;
     protected boolean suppressEmptyParameters;
 
+    @Override
     public Component getBean(ValueStack stack, HttpServletRequest req, HttpServletResponse res) {
         return new Param(stack);
     }
 
+    @Override
     protected void populateParams() {
         super.populateParams();
 
@@ -59,8 +60,28 @@ public class ParamTag extends ComponentTagSupport {
     public void setValue(String value) {
         this.value = value;
     }
-    
+
     public void setSuppressEmptyParameters(boolean suppressEmptyParameters) {
         this.suppressEmptyParameters = suppressEmptyParameters;
     }
+
+    /**
+     * Must declare the setter at the descendant Tag class level in order for the tag handler to locate the method.
+     */
+    @Override
+    public void setPerformClearTagStateForTagPoolingServers(boolean performClearTagStateForTagPoolingServers) {
+        super.setPerformClearTagStateForTagPoolingServers(performClearTagStateForTagPoolingServers);
+    }
+
+    @Override
+    protected void clearTagStateForTagPoolingServers() {
+       if (!getPerformClearTagStateForTagPoolingServers()) {
+            return;  // If flag is false (default setting), do not perform any state clearing.
+        }
+        super.clearTagStateForTagPoolingServers();
+        this.name = null;
+        this.value = null;
+        this.suppressEmptyParameters = false;
+    }
+
 }

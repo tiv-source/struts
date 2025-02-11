@@ -16,25 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.tiles;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.LocaleProvider;
-import com.opensymphony.xwork2.config.ConfigurationException;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.locale.LocaleProviderFactory;
+import org.apache.struts2.config.ConfigurationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.ServletActionContext;
-import org.apache.tiles.locale.LocaleResolver;
+import org.apache.tiles.core.locale.LocaleResolver;
 import org.apache.tiles.request.Request;
 import org.apache.tiles.request.servlet.ServletUtil;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
 
 public class StrutsTilesLocaleResolver implements LocaleResolver {
 
-    private static Logger LOG = LogManager.getLogger(StrutsTilesLocaleResolver.class);
+    private static final Logger LOG = LogManager.getLogger(StrutsTilesLocaleResolver.class);
 
     @Override
     public Locale resolveLocale(Request request) {
@@ -46,9 +45,9 @@ public class StrutsTilesLocaleResolver implements LocaleResolver {
             throw new ConfigurationException("There is no ActionContext for current request!");
         }
 
-        LocaleProvider provider = ctx.getInstance(LocaleProvider.class);
+        LocaleProviderFactory localeProviderFactory = ctx.getInstance(LocaleProviderFactory.class);
 
-        return provider.getLocale();
+        return localeProviderFactory.createLocaleProvider().getLocale();
     }
 
 }

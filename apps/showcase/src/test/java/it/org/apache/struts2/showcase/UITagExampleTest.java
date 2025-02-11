@@ -20,36 +20,55 @@
  */
 package it.org.apache.struts2.showcase;
 
-public class UITagExampleTest extends ITBaseTest {
-    public void testInputForm() {
-        setScriptingEnabled(false);
-        beginAt("/tags/ui/example!input.action");
-        assertFormPresent("exampleSubmit");
-        // text box
-        assertFormElementPresent("name");
-        // textarea
-        assertFormElementPresent("bio");
-        // select
-        assertFormElementPresent("favouriteColor");
-        // checkbox list
-        assertFormElementPresent("friends");
-        // checkbox
-        assertFormElementPresent("legalAge");
+import org.htmlunit.WebClient;
+import org.htmlunit.html.HtmlCheckBoxInput;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlSelect;
+import org.htmlunit.html.HtmlSubmitInput;
+import org.htmlunit.html.HtmlTextArea;
+import org.htmlunit.html.HtmlTextInput;
+import org.junit.Assert;
+import org.junit.Test;
 
-        // set fields
-        setTextField("name", "name");
-        setTextField("bio", "bio");
-        selectOption("favouriteColor", "Red");
-        checkCheckbox("friends", "Patrick");
-        checkCheckbox("friends", "Jason");
-        checkCheckbox("legalAge");
+public class UITagExampleTest {
+    @Test
+    public void testInputForm() throws Exception {
+        try (final WebClient webClient = new WebClient()) {
+            final HtmlPage page = webClient.getPage(ParameterUtils.getBaseUrl() + "/tags/ui/example!input.action");
 
-        submit();
+            final HtmlForm form = page.getFormByName("exampleSubmit");
+            Assert.assertNotNull(form);
 
-        assertTextInElement("name", "name");
-        assertTextInElement("bio", "bio");
-        assertTextInElement("favouriteColor", "Red");
-        assertTextInElement("friends", "[Patrick, Jason]");
-        assertTextInElement("legalAge", "true");
+            final HtmlTextInput textField = form.getInputByName("name");
+            final HtmlTextArea textField2 = form.getTextAreaByName("bio");
+            final HtmlSelect textField3 = form.getSelectByName("favouriteColor");
+            final HtmlCheckBoxInput textField4 = form.getInputByValue("Patrick");
+            final HtmlCheckBoxInput textField41 = form.getInputByValue("Jason");
+            final HtmlCheckBoxInput textField5 = form.getInputByName("legalAge");
+
+            Assert.assertNotNull(textField);
+            Assert.assertNotNull(textField2);
+            Assert.assertNotNull(textField3);
+            Assert.assertNotNull(textField4);
+            Assert.assertNotNull(textField41);
+            Assert.assertNotNull(textField5);
+
+            textField.type("name");
+            textField2.type("bio");
+            textField3.setSelectedAttribute("Red", true);
+            textField4.setChecked(true);
+            textField41.setChecked(true);
+            textField5.setChecked(true);
+
+            final HtmlSubmitInput button = form.getInputByValue("Submit");
+            final HtmlPage page2 = button.click();
+
+            Assert.assertEquals("name", page2.getElementById("name").asNormalizedText());
+            Assert.assertEquals("bio", page2.getElementById("bio").asNormalizedText());
+            Assert.assertEquals("Red", page2.getElementById("favouriteColor").asNormalizedText());
+            Assert.assertEquals("[Patrick, Jason]", page2.getElementById("friends").asNormalizedText());
+            Assert.assertEquals("true", page2.getElementById("legalAge").asNormalizedText());
+        }
     }
 }

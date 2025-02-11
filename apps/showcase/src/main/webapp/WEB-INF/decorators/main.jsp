@@ -1,3 +1,23 @@
+<!--
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+-->
 <%@ page import="org.apache.struts2.result.StrutsResultSupport" %>
 <!DOCTYPE html>
 <%@ page
@@ -11,11 +31,11 @@
 
     // Calculate the view sources url
     String sourceUrl = request.getContextPath() + "/viewSource.action";
-    com.opensymphony.xwork2.ActionInvocation inv = com.opensymphony.xwork2.ActionContext.getContext().getActionInvocation();
+    org.apache.struts2.ActionInvocation inv = org.apache.struts2.ActionContext.getContext().getActionInvocation();
     org.apache.struts2.dispatcher.mapper.ActionMapping mapping = org.apache.struts2.ServletActionContext.getActionMapping();
     if (inv != null) {
         try {
-            com.opensymphony.xwork2.util.location.Location loc = inv.getProxy().getConfig().getLocation();
+            org.apache.struts2.util.location.Location loc = inv.getProxy().getConfig().getLocation();
             sourceUrl += "?config=" + (loc != null ? loc.getURI() + ":" + loc.getLineNumber() : "");
         } catch (Exception e) {
             sourceUrl += "?config=";
@@ -29,8 +49,6 @@
         sourceUrl += "?page=" + request.getServletPath();
     }
 %>
-<%@taglib prefix="decorator" uri="http://www.opensymphony.com/sitemesh/decorator" %>
-<%@taglib prefix="page" uri="http://www.opensymphony.com/sitemesh/page" %>
 <%@taglib prefix="s" uri="/struts-tags" %>
 
 <html lang="en">
@@ -41,34 +59,43 @@
     <meta name="description" content="Struts2 Showcase for Apache Struts Project">
     <meta name="author" content="The Apache Software Foundation">
 
-    <title><decorator:title default="Struts2 Showcase"/></title>
+    <title><sitemesh:write property="title"/></title>
 
-    <link href="<s:url value='/styles/bootstrap.css' encode='false' includeParams='none'/>" rel="stylesheet" type="text/css" media="all">
-    <link href="<s:url value='/styles/main.css' encode='false' includeParams='none'/>" rel="stylesheet" type="text/css" media="all"/>
+    <s:url var="bootstrapCss" value='/styles/bootstrap.css' encode='false' includeParams='none'/>
+    <s:link href="%{bootstrapCss}" rel="stylesheet" type="text/css" media="all"/>
+    <s:url var="mainCss" value='/styles/main.css' encode='false' includeParams='none'/>
+    <s:link href="%{mainCss}" rel="stylesheet" type="text/css" media="all"/>
 
-    <script src="<s:url value='/js/jquery-2.1.4.min.js' encode='false' includeParams='none'/>"></script>
-    <script src="<s:url value='/js/bootstrap.min.js' encode='false' includeParams='none'/>"></script>
-    <script type="text/javascript">
+    <s:url var="jqueryJs" value='/js/jquery-2.1.4.min.js' encode='false' includeParams='none'/>
+    <s:script src="%{jqueryJs}"/>
+    <s:url var="bootstrapJs" value='/js/bootstrap.min.js' encode='false' includeParams='none'/>
+    <s:script src="%{bootstrapJs}"/>
+    <s:script>
         $(function () {
             var alerts = $('ul.alert').wrap('<div />');
             alerts.prepend('<a class="close" data-dismiss="alert" href="#">&times;</a>');
             alerts.alert();
         });
-    </script>
+    </s:script>
 
     <!-- Prettify -->
-    <link href="<s:url value='/styles/prettify.css' encode='false' includeParams='none'/>" rel="stylesheet">
-    <script src="<s:url value='/js/prettify.js' encode='false' includeParams='none'/>"></script>
+    <s:url var="prettifyCss" value='/styles/prettify.css' encode='false' includeParams='none'/>
+    <s:link href="%{prettifyCss}" rel="stylesheet"/>
+    <s:url var="prettifyJs" value='/js/prettify.js' encode='false' includeParams='none'/>
+    <s:script src="%{prettifyJs}"/>
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <s:script src="https://html5shim.googlecode.com/svn/trunk/html5.js"/>
     <![endif]-->
 
-    <decorator:head/>
+    <s:script>
+        jQuery(document).ready(function() { prettyPrint(); } );
+    </s:script>
+    <sitemesh:write property="head"/>
 </head>
 
-<body id="page-home" onload="prettyPrint();">
+<body id="page-home">
 
 <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
@@ -181,6 +208,7 @@
                         <ul class="dropdown-menu" role="menu">
                             <s:url var="quizBasic" namespace="/validation" action="quizBasic" method="input"/>
                             <s:url var="quizClient" namespace="/validation" action="quizClient" method="input"/>
+                            <s:url var="quizDwr" namespace="/validation" action="quizDwr" method="input"/>
                             <s:url var="quizClientCss" namespace="/validation" action="quizClientCss" method="input"/>
                             <s:url var="fieldValidatorUrl" action="showFieldValidatorsExamples" namespace="/validation"/>
                             <s:url var="nonFieldValidatorUrl" action="showNonFieldValidatorsExamples" namespace="/validation"/>
@@ -211,10 +239,13 @@
                             </li>
                             <li><s:a value="/person/index.html">Person Manager</s:a></li>
                             <li><s:a value="/skill/index.html">CRUD</s:a></li>
-                            <li><s:a value="/wait/index.html">Execute &amp; Wait</s:a></li>
+                            <li><s:a value="/wait/index">Execute &amp; Wait</s:a></li>
                             <li><s:a value="/token/index.html">Token</s:a></li>
                             <li><s:url var="url" namespace="/modelDriven" action="modelDriven"/><s:a
                                     href="%{url}">Model Driven</s:a></li>
+                            <li><s:a value="/async/index.html">Async</s:a></li>
+                            <li><s:a value="/dispatcher/dispatch.action">Dispatcher result - dispatch</s:a></li>
+                            <li><s:a value="/dispatcher/forward.action">Dispatcher result - forward</s:a></li>
                         </ul>
                     </li>
                     <li class="dropdown">
@@ -253,8 +284,7 @@
     </div>
 </nav>
 
-<decorator:body/>
-
+<sitemesh:write property="body"/>
 
 <hr>
 

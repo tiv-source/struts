@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,19 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2;
 
-import com.mockobjects.servlet.MockHttpServletRequest;
-import com.mockobjects.servlet.MockHttpServletResponse;
-import com.mockobjects.servlet.MockServletContext;
-import com.opensymphony.xwork2.ActionContext;
-import junit.framework.TestCase;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockServletContext;
+
+import org.apache.struts2.ActionContext;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import junit.framework.TestCase;
 
 
 /**
@@ -40,15 +39,14 @@ import java.util.Map;
  */
 public class ServletActionContextTest extends TestCase implements StrutsStatics {
 
-    ActionContext actionContext;
-    ServletActionContext servletActionContext;
+    private ActionContext actionContext;
     private HttpServletRequest request;
     private HttpServletResponse response;
     private MockServletContext servletContext;
 
 
     public void setUp() {
-        Map extraContext = new HashMap();
+        Map<String, Object> extraContext = new HashMap<>();
 
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
@@ -58,8 +56,7 @@ public class ServletActionContextTest extends TestCase implements StrutsStatics 
         extraContext.put(HTTP_RESPONSE, response);
         extraContext.put(SERVLET_CONTEXT, servletContext);
 
-        actionContext = new ActionContext(extraContext);
-        ServletActionContext.setContext(actionContext);
+        actionContext = ActionContext.of(extraContext).bind();
     }
 
     public void testContextParams() {
@@ -69,7 +66,7 @@ public class ServletActionContextTest extends TestCase implements StrutsStatics 
     }
 
     public void testGetContext() {
-        ActionContext threadContext = ServletActionContext.getContext();
+        ActionContext threadContext = ServletActionContext.getActionContext();
         assertEquals(actionContext, threadContext);
     }
 }

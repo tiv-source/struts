@@ -1,6 +1,4 @@
 /*
- * $Id: ClasspathConfigurationProvider.java 655902 2008-05-13 15:15:12Z bpontarelli $
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +15,14 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.apache.struts2.convention;
+ */
+package org.apache.struts2.convention;
 
-import com.opensymphony.xwork2.config.PackageProvider;
-import com.opensymphony.xwork2.config.Configuration;
-import com.opensymphony.xwork2.config.ConfigurationException;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.inject.Container;
+import org.apache.struts2.config.Configuration;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.config.PackageProvider;
+import org.apache.struts2.inject.Container;
+import org.apache.struts2.inject.Inject;
 
 /**
  * <p>
@@ -35,20 +34,23 @@ import com.opensymphony.xwork2.inject.Container;
  * </p>
  */
 public class ClasspathPackageProvider implements PackageProvider {
-     private ActionConfigBuilder actionConfigBuilder;
+    private final ActionConfigBuilder actionConfigBuilder;
 
     @Inject
     public ClasspathPackageProvider(Container container) {
         this.actionConfigBuilder = container.getInstance(ActionConfigBuilder.class, container.getInstance(String.class, ConventionConstants.CONVENTION_ACTION_CONFIG_BUILDER));
     }
 
+    @Override
     public void init(Configuration configuration) throws ConfigurationException {
     }
 
+    @Override
     public boolean needsReload() {
-        return actionConfigBuilder.needsReload(); 
+        return actionConfigBuilder.needsReload();
     }
 
+    @Override
     public void loadPackages() throws ConfigurationException {
         actionConfigBuilder.buildActionConfigs();
     }

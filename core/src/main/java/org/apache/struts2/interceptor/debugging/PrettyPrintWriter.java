@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.interceptor.debugging;
 
 import java.io.PrintWriter;
@@ -35,7 +32,7 @@ public class PrettyPrintWriter {
     private int depth;
     private boolean readyForNewLine;
     private boolean tagIsEmpty;
-    private String newLine;
+    private final String newLine;
     private boolean escape = true;
 
     private static final char[] NULL = "&#x0;".toCharArray();

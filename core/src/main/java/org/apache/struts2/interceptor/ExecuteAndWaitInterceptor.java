@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,25 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.interceptor;
 
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionProxy;
-import com.opensymphony.xwork2.inject.Container;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.interceptor.MethodFilterInterceptor;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.ActionProxy;
+import org.apache.struts2.config.entities.ResultConfig;
+import org.apache.struts2.inject.Container;
+import org.apache.struts2.inject.Inject;
+import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.interceptor.exec.BackgroundProcess;
+import org.apache.struts2.interceptor.exec.ExecutorProvider;
+import org.apache.struts2.interceptor.exec.StrutsBackgroundProcess;
+import org.apache.struts2.interceptor.exec.StrutsExecutorProvider;
 import org.apache.struts2.util.TokenHelper;
 import org.apache.struts2.views.freemarker.FreemarkerResult;
 
-import javax.servlet.http.HttpSession;
+import java.io.Serial;
 import java.util.Map;
-
 
 /**
  * <!-- START SNIPPET: description -->
@@ -88,7 +89,7 @@ import java.util.Map;
  * <!-- END SNIPPET: description -->
  *
  * <p><u>Interceptor parameters:</u></p>
- *
+ * <p>
  * <!-- START SNIPPET: parameters -->
  *
  * <ul>
@@ -98,11 +99,11 @@ import java.util.Map;
  * <li>delaySleepInterval (optional) - only used with delay. Used for waking up at certain intervals to check if the background process is already done. Default is 100 millis.</li>
  *
  * </ul>
- *
+ * <p>
  * <!-- END SNIPPET: parameters -->
  *
  * <p><u>Extending the interceptor:</u></p>
- *
+ * <p>
  * <!-- START SNIPPET: extending -->
  * <p>
  * If you wish to make special preparations before and/or after the invocation of the background thread, you can extend
@@ -171,12 +172,12 @@ import java.util.Map;
  *     &lt;result name="success"&gt;longRunningAction-success.jsp&lt;/result&gt;
  * &lt;/action&gt;
  * </pre>
- *
+ * <p>
  * <!-- END SNIPPET: example -->
- *
  */
 public class ExecuteAndWaitInterceptor extends MethodFilterInterceptor {
 
+    @Serial
     private static final long serialVersionUID = -2754639196749652512L;
 
     private static final Logger LOG = LogManager.getLogger(ExecuteAndWaitInterceptor.class);
@@ -190,22 +191,28 @@ public class ExecuteAndWaitInterceptor extends MethodFilterInterceptor {
     private int threadPriority = Thread.NORM_PRIORITY;
 
     private Container container;
+    private ExecutorProvider executor;
 
     @Inject
     public void setContainer(Container container) {
         this.container = container;
     }
 
+    @Inject
+    public void setExecutorProvider(ExecutorProvider executorProvider) {
+        this.executor = executorProvider;
+    }
+
     /**
      * Creates a new background process
      *
-     * @param name The process name
+     * @param name             The process name
      * @param actionInvocation The action invocation
-     * @param threadPriority The thread priority
+     * @param threadPriority   The thread priority
      * @return The new process
      */
     protected BackgroundProcess getNewBackgroundProcess(String name, ActionInvocation actionInvocation, int threadPriority) {
-        return new BackgroundProcess(name + "BackgroundThread", actionInvocation, threadPriority);
+        return new StrutsBackgroundProcess(actionInvocation, name + "_background-process", threadPriority);
     }
 
     /**
@@ -213,7 +220,6 @@ public class ExecuteAndWaitInterceptor extends MethodFilterInterceptor {
      * are mapped to requests.
      *
      * @param proxy action proxy
-     *
      * @return the name of the background thread
      */
     protected String getBackgroundProcessName(ActionProxy proxy) {
@@ -221,52 +227,71 @@ public class ExecuteAndWaitInterceptor extends MethodFilterInterceptor {
     }
 
     /* (non-Javadoc)
-     * @see com.opensymphony.xwork2.interceptor.MethodFilterInterceptor#doIntercept(com.opensymphony.xwork2.ActionInvocation)
+     * @see org.apache.struts2.interceptor.MethodFilterInterceptor#doIntercept(org.apache.struts2.ActionInvocation)
      */
+    @Override
     protected String doIntercept(ActionInvocation actionInvocation) throws Exception {
         ActionProxy proxy = actionInvocation.getProxy();
         String name = getBackgroundProcessName(proxy);
         ActionContext context = actionInvocation.getInvocationContext();
-        Map session = context.getSession();
+        Map<String, Object> session = context.getSession();
         HttpSession httpSession = ServletActionContext.getRequest().getSession(true);
-
-        Boolean secondTime  = true;
-        if (executeAfterValidationPass) {
-            secondTime = (Boolean) context.get(KEY);
-            if (secondTime == null) {
-                context.put(KEY, true);
-                secondTime = false;
-            } else {
-                secondTime = true;
-                context.put(KEY, null);
-            }
-        }
 
         //sync on the real HttpSession as the session from the context is a wrap that is created
         //on every request
         synchronized (httpSession) {
-            BackgroundProcess bp = (BackgroundProcess) session.get(KEY + name);
+            // State flag processing moved within the synchronization block, to ensure consistency.
+            Boolean secondTime = true;
+            if (executeAfterValidationPass) {
+                secondTime = (Boolean) context.get(KEY);
+                if (secondTime == null) {
+                    context.put(KEY, true);
+                    secondTime = false;
+                } else {
+                    secondTime = true;
+                    context.put(KEY, null);
+                }
+            }
+
+            final String bp_SessionKey = KEY + name;
+            BackgroundProcess bp = (BackgroundProcess) session.get(bp_SessionKey);
+
+            LOG.debug("Intercepting invocation for BackgroundProcess - session key: {}, value: {}", bp_SessionKey, bp);
+
+            //WW-4900 Checks if from a de-serialized session? so background thread missed, let's start a new one.
+            if (bp != null && bp.getInvocation() == null) {
+                LOG.trace("BackgroundProcess invocation is null (remove key, clear instance)");
+                session.remove(bp_SessionKey);
+                bp = null;
+            }
 
             if ((!executeAfterValidationPass || secondTime) && bp == null) {
-                bp = getNewBackgroundProcess(name, actionInvocation, threadPriority);
-                session.put(KEY + name, bp);
+                LOG.trace("BackgroundProcess instance is null (create new instance) - executeAfterValidationPass: {}, secondTime: {}.", executeAfterValidationPass, secondTime);
+                bp = getNewBackgroundProcess(name, actionInvocation, threadPriority).prepare();
+                session.put(bp_SessionKey, bp);
+                if (executor == null || executor.isShutdown()) {
+                    LOG.warn("Executor is shutting down (or null), cannot execute a new process, invoke next ActionInvocation step and return.");
+                    return actionInvocation.invoke();
+                }
+                executor.execute(bp);
                 performInitialDelay(bp); // first time let some time pass before showing wait page
                 secondTime = false;
             }
 
             if ((!executeAfterValidationPass || !secondTime) && bp != null && !bp.isDone()) {
+                LOG.trace("BackgroundProcess instance is not done (wait processing) - executeAfterValidationPass: {}, secondTime: {}.", executeAfterValidationPass, secondTime);
                 actionInvocation.getStack().push(bp.getAction());
 
-				final String token = TokenHelper.getToken();
-				if (token != null) {
-					TokenHelper.setSessionToken(TokenHelper.getTokenName(), token);
+                final String token = TokenHelper.getToken();
+                if (token != null) {
+                    TokenHelper.setSessionToken(TokenHelper.getTokenName(), token);
                 }
 
-                Map results = proxy.getConfig().getResults();
+                Map<String, ResultConfig> results = proxy.getConfig().getResults();
                 if (!results.containsKey(WAIT)) {
-                	LOG.warn("ExecuteAndWait interceptor has detected that no result named 'wait' is available. " +
-                            "Defaulting to a plain built-in wait page. It is highly recommend you " +
-                            "provide an action-specific or global result named '{}'.", WAIT);
+                    LOG.warn("ExecuteAndWait interceptor has detected that no result named 'wait' is available. " +
+                        "Defaulting to a plain built-in wait page. It is highly recommend you " +
+                        "provide an action-specific or global result named '{}'.", WAIT);
                     // no wait result? hmm -- let's try to do dynamically put it in for you!
 
                     //we used to add a fake "wait" result here, since the configuration is unmodifiable, that is no longer
@@ -281,16 +306,18 @@ public class ExecuteAndWaitInterceptor extends MethodFilterInterceptor {
 
                 return WAIT;
             } else if ((!executeAfterValidationPass || !secondTime) && bp != null && bp.isDone()) {
-                session.remove(KEY + name);
+                LOG.trace("BackgroundProcess instance is done (remove key, return result) - executeAfterValidationPass: {}, secondTime: {}.", executeAfterValidationPass, secondTime);
+                session.remove(bp_SessionKey);
                 actionInvocation.getStack().push(bp.getAction());
 
-                // if an exception occured during action execution, throw it here
+                // if an exception occurred during action execution, throw it here
                 if (bp.getException() != null) {
                     throw bp.getException();
                 }
 
                 return bp.getResult();
             } else {
+                LOG.trace("BackgroundProcess state fall-through (first instance, pass through), invoke next ActionInvocation step and return - executeAfterValidationPass: {}, secondTime: {}.", executeAfterValidationPass, secondTime);
                 // this is the first instance of the interceptor and there is no existing action
                 // already run in the background, so let's just let this pass through. We assume
                 // the action invocation will be run in the background on the subsequent pass through
@@ -367,5 +394,21 @@ public class ExecuteAndWaitInterceptor extends MethodFilterInterceptor {
         this.executeAfterValidationPass = executeAfterValidationPass;
     }
 
+    @Override
+    public void init() {
+        super.init();
+        if (executor == null) {
+            LOG.debug("Using: {} as ExecutorProvider", StrutsExecutorProvider.class.getSimpleName());
+            executor = container.getInstance(StrutsExecutorProvider.class);
+        }
+    }
 
+    @Override
+    public void destroy() {
+        try {
+          executor.shutdown();
+        } finally {
+          super.destroy();
+        }
+    }
 }

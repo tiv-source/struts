@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,13 +18,13 @@
  */
 package org.apache.struts2.convention;
 
-import com.opensymphony.xwork2.config.ConfigurationException;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.config.entities.PackageConfig;
-import com.opensymphony.xwork2.config.entities.ResultTypeConfig;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.util.AnnotationUtils;
-import com.opensymphony.xwork2.util.ClassLoaderUtil;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.config.entities.PackageConfig;
+import org.apache.struts2.config.entities.ResultTypeConfig;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.util.AnnotationUtils;
+import org.apache.struts2.util.ClassLoaderUtil;
 import org.apache.struts2.convention.annotation.ResultPath;
 
 import java.util.HashMap;
@@ -49,7 +47,7 @@ public class ConventionsServiceImpl implements ConventionsService {
      *          the constant name of <strong>struts.convention.result.path</strong>.
      */
     @Inject
-    public ConventionsServiceImpl(@Inject("struts.convention.result.path") String resultPath) {
+    public ConventionsServiceImpl(@Inject(ConventionConstants.CONVENTION_RESULT_PATH) String resultPath) {
         this.resultPath = resultPath;
     }
 

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,23 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.struts2.components.Component;
 import org.apache.struts2.components.Property;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
+import java.io.Serial;
 
 /**
  * @see Property
  */
 public class PropertyTag extends ComponentTagSupport {
 
+    @Serial
     private static final long serialVersionUID = 435308349113743852L;
 
     private String defaultValue;
@@ -44,16 +43,18 @@ public class PropertyTag extends ComponentTagSupport {
     private boolean escapeXml = false;
     private boolean escapeCsv = false;
 
+    @Override
     public Component getBean(ValueStack stack, HttpServletRequest req, HttpServletResponse res) {
         return new Property(stack);
     }
 
+    @Override
     protected void populateParams() {
         super.populateParams();
 
         Property tag = (Property) component;
         tag.setDefault(defaultValue);
-        tag.setValue(value); 
+        tag.setValue(value);
         tag.setEscapeHtml(escapeHtml);
         tag.setEscapeJavaScript(escapeJavaScript);
         tag.setEscapeXml(escapeXml);
@@ -71,7 +72,7 @@ public class PropertyTag extends ComponentTagSupport {
     public void setEscapeJavaScript(boolean escapeJavaScript) {
         this.escapeJavaScript = escapeJavaScript;
     }
-    
+
     public void setValue(String value) {
         this.value = value;
     }
@@ -87,4 +88,27 @@ public class PropertyTag extends ComponentTagSupport {
     public void setEscapeXml(boolean escapeXml) {
         this.escapeXml = escapeXml;
     }
+
+    /**
+     * Must declare the setter at the descendant Tag class level in order for the tag handler to locate the method.
+     */
+    @Override
+    public void setPerformClearTagStateForTagPoolingServers(boolean performClearTagStateForTagPoolingServers) {
+        super.setPerformClearTagStateForTagPoolingServers(performClearTagStateForTagPoolingServers);
+    }
+
+    @Override
+    protected void clearTagStateForTagPoolingServers() {
+       if (!getPerformClearTagStateForTagPoolingServers()) {
+            return;  // If flag is false (default setting), do not perform any state clearing.
+        }
+        super.clearTagStateForTagPoolingServers();
+        this.defaultValue = null;
+        this.value = null;
+        this.escapeHtml = true;
+        this.escapeJavaScript = false;
+        this.escapeXml = false;
+        this.escapeCsv = false;
+    }
+
 }

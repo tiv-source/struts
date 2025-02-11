@@ -1,15 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-->
 <!DOCTYPE struts PUBLIC
-	"-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
-	"http://struts.apache.org/dtds/struts-2.5.dtd">
-	
+	"-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+	"https://struts.apache.org/dtds/struts-6.0.dtd">
+
 <struts>
 	<package name="conversion" namespace="/conversion" extends="struts-default">
-	
+
         <action name="index">
             <result>/WEB-INF/conversion/index.jsp</result>
         </action>
-        
+
 		<!-- Example populating a List inside an Action -->
 		<action name="enterPersonsInfo" method="input"
 				class="org.apache.struts2.showcase.conversion.PersonAction">
@@ -29,8 +49,8 @@
 		<action name="showPersonJavaCode">
 			<result type="plainText">/WEB-INF/conversion/Person.java.txt</result>
 		</action>
-		
-		
+
+
 		<!-- Example populating a Set inside an Action -->
 		<action name="enterAddressesInfo" class="org.apache.struts2.showcase.conversion.AddressAction" method="input">
 			<result>/WEB-INF/conversion/enterAddressInfo.jsp</result>
@@ -48,9 +68,9 @@
 		<action name="showAddressJavaCode">
 			<result type="plainText">/WEB-INF/conversion/Address.java.txt</result>
 		</action>
-		
-		
-		<!-- Example populating a List with Tiger 5 Enum  -->		
+
+
+		<!-- Example populating a List with Tiger 5 Enum  -->
 		<action name="enterOperationEnumInfo" class="org.apache.struts2.showcase.conversion.OperationsEnumAction" method="input">
 			<result>/WEB-INF/conversion/enterOperations.jsp</result>
 		</action>
@@ -73,6 +93,6 @@
 		<action name="showOperationsEnumActionConversionProperties">
 			<result type="plainText">/WEB-INF/conversion/OperationsEnumActionConversion.txt</result>
 		</action>
-		
+
 	</package>
-</struts>	
+</struts>

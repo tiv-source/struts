@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,24 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
+
+import org.apache.struts2.inject.Container;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.struts2.views.annotations.StrutsTag;
+import org.apache.struts2.views.annotations.StrutsTagAttribute;
 
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.struts2.views.annotations.StrutsTag;
-import org.apache.struts2.views.annotations.StrutsTagAttribute;
-
-import com.opensymphony.xwork2.inject.Container;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.util.ValueStack;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 /**
  * <!-- START SNIPPET: javadoc -->
@@ -76,7 +71,7 @@ public class OptGroup extends Component {
 
     public static final String INTERNAL_LIST_UI_BEAN_LIST_PARAMETER_KEY = "optGroupInternalListUiBeanList";
 
-    private static Logger LOG = LogManager.getLogger(OptGroup.class);
+    private static final Logger LOG = LogManager.getLogger(OptGroup.class);
 
     protected HttpServletRequest req;
     protected HttpServletResponse res;
@@ -93,7 +88,7 @@ public class OptGroup extends Component {
             }
         };
     }
-    
+
     @Inject
     public void setContainer(Container container) {
         container.inject(internalUiBean);
@@ -109,7 +104,7 @@ public class OptGroup extends Component {
         internalUiBean.start(writer);
         internalUiBean.end(writer, body);
 
-        List listUiBeans = (List) select.getParameters().get(INTERNAL_LIST_UI_BEAN_LIST_PARAMETER_KEY);
+        List listUiBeans = (List) select.getAttributes().get(INTERNAL_LIST_UI_BEAN_LIST_PARAMETER_KEY);
         if (listUiBeans == null) {
             listUiBeans = new ArrayList();
         }
@@ -130,7 +125,7 @@ public class OptGroup extends Component {
     }
 
     @StrutsTagAttribute(description="Set the list attribute.")
-    public void setList(String list) {
+    public void setList(Object list) {
         internalUiBean.setList(list);
     }
 
@@ -142,5 +137,20 @@ public class OptGroup extends Component {
     @StrutsTagAttribute(description="Set the listValue attribute.")
     public void setListValue(String listValue) {
         internalUiBean.setListValue(listValue);
+    }
+
+    @StrutsTagAttribute(description = "Property of list objects to get css class from")
+    public void setListCssClass(String listCssClass) {
+        internalUiBean.setListCssClass(listCssClass);
+    }
+
+    @StrutsTagAttribute(description = "Property of list objects to get css style from")
+    public void setListCssStyle(String listCssStyle) {
+        internalUiBean.setListCssStyle(listCssStyle);
+    }
+
+    @StrutsTagAttribute(description = "Property of list objects to get title from")
+    public void setListTitle(String listTitle) {
+        internalUiBean.setListTitle(listTitle);
     }
 }

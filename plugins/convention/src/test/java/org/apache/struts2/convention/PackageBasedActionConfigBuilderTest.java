@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,24 +18,37 @@
  */
 package org.apache.struts2.convention;
 
-import com.opensymphony.xwork2.*;
-import com.opensymphony.xwork2.config.Configuration;
-import com.opensymphony.xwork2.config.entities.*;
-import com.opensymphony.xwork2.config.impl.DefaultConfiguration;
-import com.opensymphony.xwork2.factory.DefaultInterceptorFactory;
-import com.opensymphony.xwork2.factory.DefaultResultFactory;
-import com.opensymphony.xwork2.inject.Container;
-import com.opensymphony.xwork2.inject.Scope.Strategy;
-import com.opensymphony.xwork2.ognl.OgnlReflectionProvider;
-import com.opensymphony.xwork2.util.TextParseUtil;
-import com.opensymphony.xwork2.util.fs.DefaultFileManager;
-import com.opensymphony.xwork2.util.fs.DefaultFileManagerFactory;
-import com.opensymphony.xwork2.util.reflection.ReflectionException;
+import org.apache.struts2.result.ActionChainResult;
+import jakarta.servlet.ServletContext;
 import junit.framework.TestCase;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.FileManager;
+import org.apache.struts2.FileManagerFactory;
+import org.apache.struts2.ObjectFactory;
+import org.apache.struts2.config.Configuration;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.config.entities.ExceptionMappingConfig;
+import org.apache.struts2.config.entities.InterceptorConfig;
+import org.apache.struts2.config.entities.InterceptorMapping;
+import org.apache.struts2.config.entities.InterceptorStackConfig;
+import org.apache.struts2.config.entities.PackageConfig;
+import org.apache.struts2.config.entities.ResultConfig;
+import org.apache.struts2.config.entities.ResultTypeConfig;
+import org.apache.struts2.config.impl.DefaultConfiguration;
 import org.apache.struts2.convention.actions.DefaultResultPathAction;
 import org.apache.struts2.convention.actions.NoAnnotationAction;
 import org.apache.struts2.convention.actions.Skip;
-import org.apache.struts2.convention.actions.action.*;
+import org.apache.struts2.convention.actions.action.ActionNameAction;
+import org.apache.struts2.convention.actions.action.ActionNamesAction;
+import org.apache.struts2.convention.actions.action.ClassLevelAnnotationAction;
+import org.apache.struts2.convention.actions.action.ClassLevelAnnotationDefaultMethodAction;
+import org.apache.struts2.convention.actions.action.ClassLevelAnnotationsAction;
+import org.apache.struts2.convention.actions.action.ClassLevelAnnotationsDefaultMethodAction;
+import org.apache.struts2.convention.actions.action.ClassNameAction;
+import org.apache.struts2.convention.actions.action.SingleActionNameAction;
+import org.apache.struts2.convention.actions.action.TestAction;
+import org.apache.struts2.convention.actions.action.TestExtends;
 import org.apache.struts2.convention.actions.allowedmethods.ClassLevelAllowedMethodsAction;
 import org.apache.struts2.convention.actions.allowedmethods.PackageLevelAllowedMethodsAction;
 import org.apache.struts2.convention.actions.allowedmethods.sub.PackageLevelAllowedMethodsChildAction;
@@ -61,7 +72,15 @@ import org.apache.struts2.convention.actions.parentpackage.ClassLevelParentPacka
 import org.apache.struts2.convention.actions.parentpackage.PackageLevelParentPackageAction;
 import org.apache.struts2.convention.actions.parentpackage.sub.ClassLevelParentPackageChildAction;
 import org.apache.struts2.convention.actions.parentpackage.sub.PackageLevelParentPackageChildAction;
-import org.apache.struts2.convention.actions.result.*;
+import org.apache.struts2.convention.actions.result.ActionLevelResultAction;
+import org.apache.struts2.convention.actions.result.ActionLevelResultsAction;
+import org.apache.struts2.convention.actions.result.ActionLevelResultsNamesAction;
+import org.apache.struts2.convention.actions.result.ClassLevelResultAction;
+import org.apache.struts2.convention.actions.result.ClassLevelResultsAction;
+import org.apache.struts2.convention.actions.result.GlobalResultAction;
+import org.apache.struts2.convention.actions.result.GlobalResultOverrideAction;
+import org.apache.struts2.convention.actions.result.InheritedResultExtends;
+import org.apache.struts2.convention.actions.result.OverrideResultAction;
 import org.apache.struts2.convention.actions.resultpath.ClassLevelResultPathAction;
 import org.apache.struts2.convention.actions.resultpath.PackageLevelResultPathAction;
 import org.apache.struts2.convention.actions.skip.Index;
@@ -69,15 +88,33 @@ import org.apache.struts2.convention.actions.transactions.TransNameAction;
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.Actions;
 import org.apache.struts2.convention.dontfind.DontFindMeAction;
+import org.apache.struts2.factory.DefaultInterceptorFactory;
+import org.apache.struts2.factory.StrutsResultFactory;
+import org.apache.struts2.inject.Container;
+import org.apache.struts2.inject.Scope.Strategy;
+import org.apache.struts2.ognl.OgnlReflectionProvider;
+import org.apache.struts2.ognl.ProviderAllowlist;
+import org.apache.struts2.result.Result;
 import org.apache.struts2.result.ServletDispatcherResult;
+import org.apache.struts2.util.TextParseUtil;
+import org.apache.struts2.util.fs.DefaultFileManager;
+import org.apache.struts2.util.fs.DefaultFileManagerFactory;
+import org.apache.struts2.util.reflection.ReflectionException;
 import org.easymock.EasyMock;
 
-import javax.servlet.ServletContext;
 import java.net.MalformedURLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.apache.struts2.convention.ReflectionTools.getAnnotation;
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.checkOrder;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.verify;
 
 /**
  * <p>
@@ -89,9 +126,9 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        ActionContext context = new ActionContext(new HashMap<String, Object>());
-        context.setContainer(new DummyContainer());
-        ActionContext.setContext(context);
+        ActionContext.of()
+            .withContainer(new DummyContainer())
+            .bind();
     }
 
     public void testActionPackages() throws MalformedURLException {
@@ -110,7 +147,18 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         run("org.apache.struts2.convention.actions", null, "org.apache.struts2.convention.actions.exclude");
     }
 
+    public void testSmiInheritanceEnabled() throws MalformedURLException {
+        run("org.apache.struts2.convention.actions", null, null, "true");
+    }
+
+    public void testSmiInheritanceDisabled() throws MalformedURLException {
+        run("org.apache.struts2.convention.actions", null, null, "false");
+    }
+
     private void run(String actionPackages, String packageLocators, String excludePackages) throws MalformedURLException {
+        run(actionPackages, packageLocators, excludePackages, "");
+    }
+    private void run(String actionPackages, String packageLocators, String excludePackages, String enableSmiInheritance) throws MalformedURLException {
         //setup interceptors
         List<InterceptorConfig> defaultInterceptors = new ArrayList<>();
         defaultInterceptors.add(makeInterceptorConfig("interceptor-1"));
@@ -123,6 +171,19 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         InterceptorMapping interceptor2 = new InterceptorMapping("interceptor-2", new TestInterceptor());
         defaultInterceptorStacks.add(makeInterceptorStackConfig("stack-1", interceptor1, interceptor2));
 
+        //setup strict MethodInvocation
+        boolean strictMethodInvocation = true;
+        boolean isSmiInheritanceEnabled = false;
+        // Sets the SMI value to false so we can test that the created package configs adopt the SMI value of their parent.
+        // If enableSmiInheritance is set to false it is expected that the generated package configs have their SMI value set to true (the default)
+        // even when the SMI of their parent is set to false.
+        if (StringUtils.equals(enableSmiInheritance, "true")) {
+            strictMethodInvocation = false;
+            isSmiInheritanceEnabled = true;
+        } else if (StringUtils.equals(enableSmiInheritance, "false")) {
+            strictMethodInvocation = false;
+        }
+
         //setup results
         ResultTypeConfig[] defaultResults = new ResultTypeConfig[]{new ResultTypeConfig.Builder("dispatcher",
                 ServletDispatcherResult.class.getName()).defaultResultParam("location").build(),
@@ -132,8 +193,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         Set<String> globalAllowedMethods = TextParseUtil.commaDelimitedStringToSet("execute,browse,cancel,input");
 
         PackageConfig strutsDefault = makePackageConfig("struts-default", null, null, "dispatcher",
-                defaultResults, defaultInterceptors, defaultInterceptorStacks, globalAllowedMethods);
-
+                defaultResults, defaultInterceptors, defaultInterceptorStacks, globalAllowedMethods, strictMethodInvocation);
         PackageConfig packageLevelParentPkg = makePackageConfig("package-level", null, null, null);
         PackageConfig classLevelParentPkg = makePackageConfig("class-level", null, null, null);
 
@@ -339,6 +399,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
 
         ActionNameBuilder actionNameBuilder = new SEOActionNameBuilder("true", "-");
         ObjectFactory of = new ObjectFactory();
+        of.setContainer(mockContainer);
         DefaultInterceptorMapBuilder interceptorBuilder = new DefaultInterceptorMapBuilder();
         interceptorBuilder.setConfiguration(configuration);
 
@@ -348,7 +409,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         mockContainer.setResultMapBuilder(resultMapBuilder);
         mockContainer.setConventionsService(new ConventionsServiceImpl(""));
 
-        PackageBasedActionConfigBuilder builder = new PackageBasedActionConfigBuilder(configuration, mockContainer ,of, "false", "struts-default");
+        PackageBasedActionConfigBuilder builder = new PackageBasedActionConfigBuilder(configuration, mockContainer , of, "false", "struts-default", enableSmiInheritance);
         builder.setFileProtocols("jar");
         if (actionPackages != null) {
             builder.setActionPackages(actionPackages);
@@ -364,12 +425,14 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         fileManagerFactory.setFileManager(new DefaultFileManager());
         builder.setFileManagerFactory(fileManagerFactory);
         builder.setPackageLocatorsBase("org.apache.struts2.convention.actions");
+        builder.setProviderAllowlist(new ProviderAllowlist());
         builder.buildActionConfigs();
         verify(resultMapBuilder);
 
         /* org.apache.struts2.convention.actions.action */
         PackageConfig pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.action#struts-default#/action");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(14, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "action1", ActionNameAction.class, "run1", pkgConfig.getName());
         verifyActionConfig(pkgConfig, "action2", ActionNameAction.class, "run2", pkgConfig.getName());
@@ -393,12 +456,14 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         //action on namespace1 (action level)
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.namespace3#struts-default#/namespaces1");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "action-level-namespaces", ActionLevelNamespacesAction.class, "execute", pkgConfig.getName());
 
         //action on namespace2 (action level)
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.namespace3#struts-default#/namespaces2");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "action-level-namespaces", ActionLevelNamespacesAction.class, "execute", pkgConfig.getName());
 
@@ -406,12 +471,14 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         //action on namespace3 (action level)
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.namespace4#struts-default#/namespaces3");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "action-and-package-level-namespaces", ActionAndPackageLevelNamespacesAction.class, "execute", pkgConfig.getName());
 
         //action on namespace4 (package level)
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.namespace4#struts-default#/namespaces4");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "action-and-package-level-namespaces", ActionAndPackageLevelNamespacesAction.class, "execute", pkgConfig.getName());
 
@@ -420,6 +487,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions.params */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.params#struts-default#/params");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         ActionConfig ac = pkgConfig.getAllActionConfigs().get("actionParam1");
         assertNotNull(ac);
@@ -432,6 +500,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions.params */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.exception#struts-default#/exception");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(2, pkgConfig.getActionConfigs().size());
 
         ac = pkgConfig.getAllActionConfigs().get("exception1");
@@ -469,6 +538,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions.idx */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.idx#struts-default#/idx");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(3, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "", org.apache.struts2.convention.actions.idx.Index.class, "execute", pkgConfig.getName());
         verifyActionConfig(pkgConfig, "index", org.apache.struts2.convention.actions.idx.Index.class, "execute", pkgConfig.getName());
@@ -478,11 +548,13 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions.defaultinterceptor */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.defaultinterceptor#struts-default#/defaultinterceptor");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals("validationWorkflowStack", pkgConfig.getDefaultInterceptorRef());
 
         /* org.apache.struts2.convention.actions.idx.idx2 */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.idx.idx2#struts-default#/idx/idx2");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(2, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "", org.apache.struts2.convention.actions.idx.idx2.Index.class, "execute", pkgConfig.getName());
         verifyActionConfig(pkgConfig, "index", org.apache.struts2.convention.actions.idx.idx2.Index.class, "execute", pkgConfig.getName());
@@ -490,24 +562,28 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions.namespace action level */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.namespace#struts-default#/action-level");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "action", ActionLevelNamespaceAction.class, "execute", pkgConfig.getName());
 
         /* org.apache.struts2.convention.actions.namespace class level */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.namespace#struts-default#/class-level");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "class-level-namespace", ClassLevelNamespaceAction.class, "execute", pkgConfig.getName());
 
         /* org.apache.struts2.convention.actions.namespace package level */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.namespace#struts-default#/package-level");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "package-level-namespace", PackageLevelNamespaceAction.class, "execute", pkgConfig.getName());
 
         /* org.apache.struts2.convention.actions.namespace2 */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.namespace2#struts-default#/namespace2");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "default-namespace", DefaultNamespaceAction.class, "execute", pkgConfig.getName());
 
@@ -540,33 +616,52 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions.allowedmethods class level */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.allowedmethods#struts-default#/allowedmethods");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(2, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "class-level-allowed-methods", ClassLevelAllowedMethodsAction.class, "execute", pkgConfig.getName());
         assertEquals("struts-default", pkgConfig.getParents().get(0).getName());
 
         ActionConfig actionConfig = pkgConfig.getActionConfigs().get("class-level-allowed-methods");
-        assertEquals(actionConfig.getAllowedMethods().size(), 5);
         assertTrue(actionConfig.getAllowedMethods().contains("execute"));
-        assertTrue(actionConfig.getAllowedMethods().contains("end"));
-        assertTrue(actionConfig.getAllowedMethods().contains("input"));
+        int allowedMethodsSize = actionConfig.getAllowedMethods().size();
+        if (!pkgConfig.isStrictMethodInvocation()) {
+            // With strict method invocation disabled the allowed methods are "execute" and the wildcard "*"
+            assertEquals(2, allowedMethodsSize);
+        } else {
+            assertEquals(7, allowedMethodsSize);
+            assertTrue(actionConfig.getAllowedMethods().contains("end"));
+            assertTrue(actionConfig.getAllowedMethods().contains("input"));
+            assertTrue(actionConfig.getAllowedMethods().contains("cancel"));
+            assertTrue(actionConfig.getAllowedMethods().contains("start"));
+            assertTrue(actionConfig.getAllowedMethods().contains("home"));
+            assertTrue(actionConfig.getAllowedMethods().contains("browse"));
+        }
 
         /* org.apache.struts2.convention.actions.allowedmethods.sub package level */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.allowedmethods.sub#struts-default#/allowedmethods/sub");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(1, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "package-level-allowed-methods-child", PackageLevelAllowedMethodsChildAction.class, "execute", pkgConfig.getName());
         assertEquals("struts-default", pkgConfig.getParents().get(0).getName());
 
         actionConfig = pkgConfig.getActionConfigs().get("package-level-allowed-methods-child");
-        assertEquals(actionConfig.getAllowedMethods().size(), 6);
         assertTrue(actionConfig.getAllowedMethods().contains("execute"));
-        assertTrue(actionConfig.getAllowedMethods().contains("home"));
-        assertTrue(actionConfig.getAllowedMethods().contains("start"));
-        assertTrue(actionConfig.getAllowedMethods().contains("input"));
+        allowedMethodsSize = actionConfig.getAllowedMethods().size();
+        if (!pkgConfig.isStrictMethodInvocation()) {
+            // With strict method invocation disabled the allowed methods are execute and the wildcard *
+            assertEquals(2, allowedMethodsSize);
+        } else {
+            assertEquals(6, allowedMethodsSize);
+            assertTrue(actionConfig.getAllowedMethods().contains("home"));
+            assertTrue(actionConfig.getAllowedMethods().contains("start"));
+            assertTrue(actionConfig.getAllowedMethods().contains("input"));
+        }
 
         /* org.apache.struts2.convention.actions.result */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.result#struts-default#/result");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(7, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "class-level-result", ClassLevelResultAction.class, "execute", pkgConfig.getName());
         verifyActionConfig(pkgConfig, "class-level-results", ClassLevelResultsAction.class, "execute", pkgConfig.getName());
@@ -577,6 +672,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions.resultpath */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.resultpath#struts-default#/resultpath");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(2, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "class-level-result-path", ClassLevelResultPathAction.class, "execute", pkgConfig.getName());
         verifyActionConfig(pkgConfig, "package-level-result-path", PackageLevelResultPathAction.class, "execute", pkgConfig.getName());
@@ -584,6 +680,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions.interceptorRefs */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.interceptor#struts-default#/interceptor");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         assertEquals(9, pkgConfig.getActionConfigs().size());
         verifyActionConfigInterceptors(pkgConfig, "action100", "interceptor-1");
         verifyActionConfigInterceptors(pkgConfig, "action200", "interceptor-1", "interceptor-2");
@@ -602,6 +699,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         /* org.apache.struts2.convention.actions */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions#struts-default#");
         assertNotNull(pkgConfig);
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
 
         assertEquals(4, pkgConfig.getActionConfigs().size());
         verifyActionConfig(pkgConfig, "no-annotation", NoAnnotationAction.class, "execute", pkgConfig.getName());
@@ -612,6 +710,7 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
 
         /* org.apache.struts2.convention.actions.transactions */
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.transactions#struts-default#/transactions");
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         verifyActionConfig(pkgConfig, "trans1", TransNameAction.class, "trans1", pkgConfig.getName());
         verifyActionConfig(pkgConfig, "trans2", TransNameAction.class, "trans2", pkgConfig.getName());
 
@@ -625,12 +724,13 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
 
         //test unknown handler automatic chaining
         pkgConfig = configuration.getPackageConfig("org.apache.struts2.convention.actions.chain#struts-default#/chain");
+        checkSmiValue(pkgConfig, strutsDefault, isSmiInheritanceEnabled);
         ServletContext context = EasyMock.createNiceMock(ServletContext.class);
         EasyMock.replay(context);
 
         ObjectFactory workingFactory = configuration.getContainer().getInstance(ObjectFactory.class);
         ConventionUnknownHandler uh = new ConventionUnknownHandler(configuration, workingFactory, context, mockContainer, "struts-default", null, "-");
-        ActionContext actionContext = new ActionContext(Collections.EMPTY_MAP);
+        ActionContext actionContext = ActionContext.of(Collections.emptyMap()).bind();
 
         Result result = uh.handleUnknownResult(actionContext, "foo", pkgConfig.getActionConfigs().get("foo"), "bar");
         assertNotNull(result);
@@ -669,6 +769,14 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         assertEquals(packageName, ac.getPackageName());
     }
 
+    private void checkSmiValue(PackageConfig pkgConfig, PackageConfig parentConfig,  boolean isSmiInheritanceEnabled) {
+        if (isSmiInheritanceEnabled) {
+            assertEquals(parentConfig.isStrictMethodInvocation(), pkgConfig.isStrictMethodInvocation());
+        } else if (!isSmiInheritanceEnabled && !parentConfig.isStrictMethodInvocation()){
+            assertTrue(pkgConfig.isStrictMethodInvocation());
+        }
+    }
+
     private void verifyActionConfigInterceptors(PackageConfig pkgConfig, String actionName, String... refs) {
         ActionConfig ac = pkgConfig.getAllActionConfigs().get(actionName);
         assertNotNull(ac);
@@ -681,12 +789,12 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
 
     private PackageConfig makePackageConfig(String name, String namespace, PackageConfig parent,
             String defaultResultType, ResultTypeConfig... results) {
-        return makePackageConfig(name, namespace, parent, defaultResultType, results, null, null, null);
+        return makePackageConfig(name, namespace, parent, defaultResultType, results, null, null, null, true);
     }
 
     private PackageConfig makePackageConfig(String name, String namespace, PackageConfig parent,
             String defaultResultType, ResultTypeConfig[] results, List<InterceptorConfig> interceptors,
-            List<InterceptorStackConfig> interceptorStacks, Set<String> globalAllowedMethods) {
+            List<InterceptorStackConfig> interceptorStacks, Set<String> globalAllowedMethods, boolean strictMethodInvocation) {
         PackageConfig.Builder builder = new PackageConfig.Builder(name);
         if (namespace != null) {
             builder.namespace(namespace);
@@ -715,6 +823,10 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
 
         if (globalAllowedMethods != null) {
             builder.addGlobalAllowedMethods(globalAllowedMethods);
+        }
+
+        if (!strictMethodInvocation) {
+            builder.strictMethodInvocation(strictMethodInvocation);
         }
 
         return new MyPackageConfig(builder.build());
@@ -778,8 +890,11 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
                 if (type == FileManagerFactory.class) {
                     return (T) fileManagerFactory;
                 }
-                T obj = type.newInstance();
-                if (obj instanceof ObjectFactory) {
+                T obj;
+                if (type == ObjectFactory.class) {
+                    obj = type.getConstructor().newInstance();
+                    ((ObjectFactory)obj).setContainer(this);
+
                     OgnlReflectionProvider rp = new OgnlReflectionProvider() {
 
                         @Override
@@ -803,12 +918,14 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
                     dif.setObjectFactory((ObjectFactory) obj);
                     dif.setReflectionProvider(rp);
 
-                    DefaultResultFactory drf = new DefaultResultFactory();
+                    StrutsResultFactory drf = new StrutsResultFactory();
                     drf.setObjectFactory((ObjectFactory) obj);
                     drf.setReflectionProvider(rp);
 
                     ((ObjectFactory) obj).setInterceptorFactory(dif);
                     ((ObjectFactory) obj).setResultFactory(drf);
+                } else {
+                    obj = type.newInstance();
                 }
                 return obj;
             } catch (Exception e) {
@@ -842,7 +959,11 @@ public class PackageBasedActionConfigBuilderTest extends TestCase {
         }
 
         public <T> T inject(Class<T> implementation) {
-            return null;
+            try {
+                return implementation.newInstance();
+            } catch (Exception e) {
+                return null;
+            }
         }
 
         public void removeScopeStrategy() {

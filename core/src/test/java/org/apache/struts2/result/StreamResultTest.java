@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.result;
 
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.mock.MockActionInvocation;
-import com.opensymphony.xwork2.util.ClassLoaderUtil;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.mock.MockActionInvocation;
+import org.apache.struts2.util.ClassLoaderUtil;
+import org.apache.struts2.util.ValueStack;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.StrutsInternalTestCase;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -36,9 +33,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 
+import static org.apache.struts2.security.DefaultNotExcludedAcceptedPatternsCheckerTest.NO_EXCLUSION_ACCEPT_ALL_PATTERNS_CHECKER;
+
 /**
  * Unit test for {@link StreamResult}.
- *
  */
 public class StreamResultTest extends StrutsInternalTestCase {
 
@@ -127,12 +125,12 @@ public class StreamResultTest extends StrutsInternalTestCase {
 
         result.doExecute("helloworld", mai);
 
-        //check that that headers are not set by default        
+        //check that that headers are not set by default
         assertNull(response.getHeader("Pragma"));
         assertNull(response.getHeader("Cache-Control"));
     }
 
-     public void testAllowCacheFalse() throws Exception {
+    public void testAllowCacheFalse() throws Exception {
         result.setInputName("streamForImage");
         result.setAllowCaching(false);
         result.doExecute("helloworld", mai);
@@ -216,18 +214,48 @@ public class StreamResultTest extends StrutsInternalTestCase {
         assertEquals("filename=\"logo.png\"", response.getHeader("Content-disposition"));
     }
 
+    public void testStreamResultParseExpression() throws Exception {
+        result.setParse(true);
+        result.setInputName("${streamForImageAsExpression}");
+
+        try {
+            result.doExecute("helloworld", mai);
+            fail("double evaluation?!");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Can not find a java.io.InputStream with the name [getStreamForImage()] in the " +
+                    "invocation stack. Check the <param name=\"inputName\"> tag specified for this action is correct, " +
+                    "not excluded and accepted.", e.getMessage());
+        }
+
+        // verify that above test has really effect
+        result.setNotExcludedAcceptedPatterns(NO_EXCLUSION_ACCEPT_ALL_PATTERNS_CHECKER);
+        assertNull(result.inputStream);
+        result.doExecute("helloworld", mai);
+        assertNotNull(result.inputStream);
+        container.inject(result);   // roll back pattern checkers
+    }
+
+    public void testStreamResultParseGetter() throws Exception {
+        result.setParse(true);
+        result.setInputName("getStreamForImage()");
+        assertNull(result.inputStream);
+        result.doExecute("helloworld", mai);
+        assertNotNull(result.inputStream);
+    }
+
     protected void setUp() throws Exception {
         super.setUp();
         response = new MockHttpServletResponse();
 
         result = new StreamResult();
+        container.inject(result);
         result.setContentLength("${contentLength}");
         stack = ActionContext.getContext().getValueStack();
 
         MyImageAction action = new MyImageAction();
         contentLength = (int) action.getContentLength();
 
-        mai = new com.opensymphony.xwork2.mock.MockActionInvocation();
+        mai = new MockActionInvocation();
         mai.setAction(action);
         mai.setStack(stack);
         mai.setInvocationContext(ActionContext.getContext());
@@ -235,7 +263,6 @@ public class StreamResultTest extends StrutsInternalTestCase {
 
         ActionContext.getContext().put(ServletActionContext.HTTP_RESPONSE, response);
     }
-
 
 
     protected void tearDown() throws Exception {
@@ -247,28 +274,37 @@ public class StreamResultTest extends StrutsInternalTestCase {
         mai = null;
     }
 
-    public class MyImageAction implements Action {
+    public static class MyImageAction implements Action {
 
-        public InputStream getStreamForImage() throws Exception {
+        FileInputStream streamForImage;
+        long contentLength;
+
+        public MyImageAction() throws Exception {
             // just use src/test/log4j2.xml as test file
             URL url = ClassLoaderUtil.getResource("log4j2.xml", StreamResultTest.class);
             File file = new File(new URI(url.toString()));
-            FileInputStream fis = new FileInputStream(file);
-            return fis;
+            streamForImage = new FileInputStream(file);
+            contentLength = file.length();
+        }
+
+        public InputStream getStreamForImage() {
+            return streamForImage;
         }
 
         public String execute() throws Exception {
             return SUCCESS;
         }
 
-        public long getContentLength() throws Exception {
-            URL url = ClassLoaderUtil.getResource("log4j2.xml", StreamResultTest.class);
-            File file = new File(new URI(url.toString()));
-            return file.length();
+        public long getContentLength() {
+            return contentLength;
         }
 
         public String getStreamForImageAsString() {
             return "streamForImage";
+        }
+
+        public String getStreamForImageAsExpression() {
+            return "getStreamForImage()";
         }
 
         public String getContentCharSetMethod() {

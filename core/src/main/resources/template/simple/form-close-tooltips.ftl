@@ -19,12 +19,11 @@
  */
 -->
 
-<#-- 
+<#--
  Code that will add javascript needed for tooltips
 --><#t/>
-<#if (parameters.hasTooltip!false)><#t/>
-	<#lt/><!-- javascript that is needed for tooltips -->
-	<#lt/><script type="text/javascript" src='<@s.url value="/struts/domTT.js" includeParams="none" encode="false" />'></script>
-	<#lt/><link rel="stylesheet" type="text/css" href="<@s.url value="/struts/domTT.css" includeParams="none" encode="false" />"/>
-	
+<#if (attributes.hasTooltip!false)><#t/>
+    <#lt/><!-- javascript that is needed for tooltips -->
+    <#lt/><@s.script src="${base}${attributes.staticContentPath}/domTT.js" />
+    <#lt/><@s.link rel="stylesheet" type="text/css" href="${base}${attributes.staticContentPath}/domTT.css" />
 </#if><#t/>

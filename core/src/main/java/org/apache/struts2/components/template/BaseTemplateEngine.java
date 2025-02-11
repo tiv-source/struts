@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components.template;
 
-import com.opensymphony.xwork2.util.ClassLoaderUtil;
+import org.apache.struts2.util.ClassLoaderUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.ServletActionContext;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import java.io.*;
 import java.util.Map;
 import java.util.Properties;
@@ -145,7 +142,7 @@ public abstract class BaseTemplateEngine implements TemplateEngine {
 
     protected String getFinalTemplateName(Template template) {
         String t = template.toString();
-        if (t.indexOf(".") <= 0) {
+        if (t.indexOf('.') <= 0) {
             return t + "." + getSuffix();
         }
         return t;

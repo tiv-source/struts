@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,11 +18,11 @@
  * under the License.
  */
 -->
-param hello     = ${parameters.hello}
-param argle     = ${parameters.argle}
-param glip      = ${parameters.glip}
-param obj.Class = ${parameters.objClass}
+param hello     = ${attributes.hello}
+param argle     = ${attributes.argle}
+param glip      = ${attributes.glip}
+param obj.Class = ${attributes.objClass}
 
-<#list parameters.array as element>
+<#list attributes.array as element>
 param array[${element_index}] = ${element}
 </#list>

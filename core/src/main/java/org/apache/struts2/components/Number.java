@@ -1,11 +1,4 @@
-/**
- *
- */
-package org.apache.struts2.components;
-
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,16 +16,18 @@ package org.apache.struts2.components;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.struts2.components;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.util.ValueStack;
-import org.apache.logging.log4j.Logger;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.util.ValueStack;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.struts2.views.annotations.StrutsTag;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Currency;
 
@@ -154,16 +149,14 @@ public class Number extends ContextBean {
             setRoundingMode(format);
 
             String msg = format.format(number);
-            if (msg != null) {
-                try {
-                    if (getVar() == null) {
-                        writer.write(msg);
-                    } else {
-                        putInContext(msg);
-                    }
-                } catch (IOException e) {
-                    LOG.error("Could not write out Number tag", e);
+            try {
+                if (getVar() == null) {
+                    writer.write(msg);
+                } else {
+                    putInContext(msg);
                 }
+            } catch (IOException e) {
+                LOG.error("Could not write out Number tag", e);
             }
         }
         return super.end(writer, "");
@@ -179,7 +172,7 @@ public class Number extends ContextBean {
             try {
                 format.setCurrency(Currency.getInstance(currency));
             } catch (IllegalArgumentException iae) {
-                LOG.error("Could not recognise a currency of [" + currency + "]");
+                LOG.error("Could not recognise a currency of [{}]", currency);
             }
         }
     }
@@ -215,14 +208,12 @@ public class Number extends ContextBean {
                 number = (java.lang.Number) numberObject;
             }
         } catch (Exception e) {
-            LOG.error("Could not convert object with key [" + name + "] to a java.lang.Number instance");
+            LOG.error("Could not convert object with key [{}] to a java.lang.Number instance", name);
         }
         return number;
     }
 
     private void setRoundingMode(NumberFormat format) {
-    /*
-        TODO lukaszlenart: enable when switched to Java 1.6
         if (roundingMode != null) {
             roundingMode = findString(roundingMode);
             if ("ceiling".equals(roundingMode)) {
@@ -242,10 +233,9 @@ public class Number extends ContextBean {
             } else if ("up".equals(roundingMode)) {
                 format.setRoundingMode(RoundingMode.UP);
             } else {
-                LOG.error("Could not recognise a roundingMode of [" + roundingMode + "]");
+                LOG.error("Could not recognise a roundingMode of [{}]", roundingMode);
             }
         }
-    */
     }
 
     private NumberFormat getNumberFormat() {
@@ -275,12 +265,12 @@ public class Number extends ContextBean {
         return format;
     }
 
-    @StrutsTagAttribute(description = "Type of number formatter (currency, integer, number or percent, default is number)", rtexprvalue = false)
+    @StrutsTagAttribute(description = "Type of number formatter (currency, integer, number or percent, default is number)")
     public void setType(String type) {
         this.type = type;
     }
 
-    @StrutsTagAttribute(description = "The currency to use for a currency format", type = "String", defaultValue = "")
+    @StrutsTagAttribute(description = "The currency to use for a currency format")
     public void setCurrency(String currency) {
         this.currency = currency;
     }
@@ -408,7 +398,7 @@ public class Number extends ContextBean {
     /**
      * @param roundingMode the roundingMode to set
      */
-    @StrutsTagAttribute(description = "The rounding mode to use - not implemented yet as this required Java 1.6", type = "String")
+    @StrutsTagAttribute(description = "The rounding mode to use, possible values: ceiling, down, floor, half-down, half-even, half-up, unnecessary, up")
     public void setRoundingMode(String roundingMode) {
         this.roundingMode = roundingMode;
     }

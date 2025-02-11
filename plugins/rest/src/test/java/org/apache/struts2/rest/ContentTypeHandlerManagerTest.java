@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,16 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.rest;
 
 import com.mockobjects.dynamic.C;
 import com.mockobjects.dynamic.Mock;
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.inject.Container;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.inject.Container;
+import org.apache.struts2.mock.MockActionInvocation;
+import org.apache.struts2.mock.MockActionProxy;
 import junit.framework.TestCase;
-import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.rest.handler.ContentTypeHandler;
 import org.apache.struts2.rest.handler.FormUrlEncodedHandler;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -36,19 +35,20 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static jakarta.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 public class ContentTypeHandlerManagerTest extends TestCase {
 
     private DefaultContentTypeHandlerManager mgr;
     private MockHttpServletResponse mockResponse;
     private MockHttpServletRequest mockRequest;
+    private MockActionInvocation invocation;
 
     @Override
     public void setUp() {
@@ -56,15 +56,18 @@ public class ContentTypeHandlerManagerTest extends TestCase {
         mockResponse = new MockHttpServletResponse();
         mockRequest = new MockHttpServletRequest();
         mockRequest.setMethod("GET");
-        ActionContext.setContext(new ActionContext(new HashMap()));
-        ServletActionContext.setRequest(mockRequest);
-        ServletActionContext.setResponse(mockResponse);
+        ActionContext actionContext = ActionContext.of().bind();
+        actionContext.withServletRequest(mockRequest);
+        actionContext.withServletResponse(mockResponse);
+
+        invocation = new MockActionInvocation();
+        invocation.setProxy(new MockActionProxy());
     }
 
     @Override
     public void tearDown() {
         mockRequest = null;
-        mockRequest = null;
+        mockResponse = null;
         mgr = null;
     }
 
@@ -72,8 +75,8 @@ public class ContentTypeHandlerManagerTest extends TestCase {
 
         String obj = "mystring";
         ContentTypeHandler handler = new ContentTypeHandler() {
-            public void toObject(Reader in, Object target) {}
-            public String fromObject(Object obj, String resultCode, Writer stream) throws IOException {
+            public void toObject(ActionInvocation invocation, Reader in, Object target) {}
+            public String fromObject(ActionInvocation invocation, Object obj, String resultCode, Writer stream) throws IOException {
                 stream.write(obj.toString());
                 return resultCode;
             }
@@ -82,7 +85,11 @@ public class ContentTypeHandlerManagerTest extends TestCase {
         };
         mgr.handlersByExtension.put("xml", handler);
         mgr.setDefaultExtension("xml");
-        mgr.handleResult(new ActionConfig.Builder("", "", "").build(), new DefaultHttpHeaders().withStatus(SC_OK), obj);
+        ActionConfig actionConfig = new ActionConfig.Builder("", "", "").build();
+        MockActionProxy proxy = new MockActionProxy();
+        proxy.setConfig(actionConfig);
+        invocation.setProxy(proxy);
+        mgr.handleResult(invocation, new DefaultHttpHeaders().withStatus(SC_OK), obj);
 
         assertEquals(obj.getBytes().length, mockResponse.getContentLength());
     }
@@ -92,12 +99,12 @@ public class ContentTypeHandlerManagerTest extends TestCase {
         Mock mockHandlerXml = new Mock(ContentTypeHandler.class);
         mockHandlerXml.matchAndReturn("getExtension", "xml");
         mgr.handlersByExtension.put("xml", (ContentTypeHandler) mockHandlerXml.proxy());
-        mgr.handleResult(null, new DefaultHttpHeaders().withStatus(SC_NOT_MODIFIED), new Object());
+        mgr.handleResult(invocation, new DefaultHttpHeaders().withStatus(SC_NOT_MODIFIED), new Object());
 
         assertEquals(0, mockResponse.getContentLength());
     }
 
-    public void testHandleValidationError() throws Exception {
+    public void testHandleValidationError() {
         mockRequest.setMethod("PUT");
 
     }
@@ -120,13 +127,13 @@ public class ContentTypeHandlerManagerTest extends TestCase {
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(ContentTypeHandler.class), C.eq("xmlOverride")), mockHandlerXmlOverride.proxy());
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(ContentTypeHandler.class), C.eq("xml")), mockHandlerXml.proxy());
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(ContentTypeHandler.class), C.eq("json")), mockHandlerJson.proxy());
-        mockContainer.expectAndReturn("getInstanceNames", C.args(C.eq(ContentTypeHandler.class)), new HashSet(Arrays.asList("xml", "xmlOverride", "json")));
+        mockContainer.expectAndReturn("getInstanceNames", C.args(C.eq(ContentTypeHandler.class)), new HashSet<>(Arrays.asList("xml", "xmlOverride", "json")));
 
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(String.class),
                 C.eq(ContentTypeHandlerManager.STRUTS_REST_HANDLER_OVERRIDE_PREFIX+"xml")), "xmlOverride");
         mockContainer.expectAndReturn("getInstance", C.args(C.eq(String.class),
                 C.eq(ContentTypeHandlerManager.STRUTS_REST_HANDLER_OVERRIDE_PREFIX+"json")), null);
-        
+
         DefaultContentTypeHandlerManager mgr = new DefaultContentTypeHandlerManager();
         mgr.setContainer((Container) mockContainer.proxy());
 
@@ -138,7 +145,7 @@ public class ContentTypeHandlerManagerTest extends TestCase {
     }
 
     /** Assert that the request content-type and differ from the response content type */
-    public void testHandleRequestContentType() throws IOException {
+    public void testHandleRequestContentType() {
 
         Mock mockHandlerForm = new Mock(ContentTypeHandler.class);
         mockHandlerForm.matchAndReturn("getExtension", null);
@@ -154,10 +161,10 @@ public class ContentTypeHandlerManagerTest extends TestCase {
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(ContentTypeHandler.class), C.eq("x-www-form-urlencoded")), mockHandlerForm.proxy());
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(ContentTypeHandler.class), C.eq("json")), mockHandlerJson.proxy());
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(String.class), C.eq("struts.rest.handlerOverride.json")), null);
-        mockContainer.expectAndReturn("getInstanceNames", C.args(C.eq(ContentTypeHandler.class)), new HashSet(Arrays.asList("x-www-form-urlencoded", "json")));
+        mockContainer.expectAndReturn("getInstanceNames", C.args(C.eq(ContentTypeHandler.class)), new HashSet<>(Arrays.asList("x-www-form-urlencoded", "json")));
 
         mockRequest.setContentType(FormUrlEncodedHandler.CONTENT_TYPE);
-        mockRequest.setContent("a=1&b=2".getBytes("UTF-8"));
+        mockRequest.setContent("a=1&b=2".getBytes(StandardCharsets.UTF_8));
         mgr.setContainer((Container) mockContainer.proxy());
         ContentTypeHandler handler = mgr.getHandlerForRequest(mockRequest);
 

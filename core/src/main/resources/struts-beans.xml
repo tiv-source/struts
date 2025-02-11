@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-->
+
+<!--
+    When declaring beans in this file you must either use name="struts" or don't name the bean at all.
+
+    The name="struts" must be used when alias was defined in {@link org.apache.struts2.config.StrutsBeanSelectionProvider} -
+    it is then the default bean's name and {@link org.apache.struts2.config.StrutsBeanSelectionProvider} links name "struts"
+    with "default" (aliasing it)
+
+    If name won't be defined then the "default" value will be used {@link org.apache.struts2.inject.Container#DEFAULT_NAME}
+    and {@link org.apache.struts2.inject.Inject}
+-->
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+        "https://struts.apache.org/dtds/struts-6.0.dtd">
+
+<struts>
+
+    <bean class="org.apache.struts2.ObjectFactory" name="struts"/>
+    <bean type="org.apache.struts2.factory.ResultFactory" name="struts"
+          class="org.apache.struts2.factory.StrutsResultFactory"/>
+    <bean type="org.apache.struts2.factory.ActionFactory" name="struts"
+          class="org.apache.struts2.factory.DefaultActionFactory"/>
+    <bean type="org.apache.struts2.factory.ConverterFactory" name="struts"
+          class="org.apache.struts2.factory.StrutsConverterFactory"/>
+    <bean type="org.apache.struts2.factory.InterceptorFactory" name="struts"
+          class="org.apache.struts2.factory.DefaultInterceptorFactory"/>
+    <bean type="org.apache.struts2.factory.ValidatorFactory" name="struts"
+          class="org.apache.struts2.factory.DefaultValidatorFactory"/>
+    <bean type="org.apache.struts2.factory.UnknownHandlerFactory" name="struts"
+          class="org.apache.struts2.factory.DefaultUnknownHandlerFactory"/>
+
+    <bean type="org.apache.struts2.FileManager" class="org.apache.struts2.util.fs.DefaultFileManager"
+          name="system" scope="singleton"/>
+    <bean type="org.apache.struts2.FileManagerFactory"
+          class="org.apache.struts2.util.fs.DefaultFileManagerFactory" name="struts" scope="singleton"/>
+
+    <bean type="org.apache.struts2.ActionProxyFactory" name="struts"
+          class="org.apache.struts2.factory.StrutsActionProxyFactory"/>
+    <bean type="org.apache.struts2.ActionProxyFactory" name="prefix"
+          class="org.apache.struts2.factory.PrefixBasedActionProxyFactory"/>
+
+    <bean type="org.apache.struts2.conversion.ObjectTypeDeterminer" name="struts"
+          class="org.apache.struts2.conversion.impl.DefaultObjectTypeDeterminer"/>
+
+    <bean type="org.apache.struts2.util.PatternMatcher" name="struts"
+          class="org.apache.struts2.util.WildcardHelper"/>
+    <bean type="org.apache.struts2.util.PatternMatcher" name="namedVariable"
+          class="org.apache.struts2.util.NamedVariablePatternMatcher"/>
+    <bean type="org.apache.struts2.util.PatternMatcher" name="regex"
+          class="org.apache.struts2.util.RegexPatternMatcher"/>
+
+    <bean type="org.apache.struts2.util.ContentTypeMatcher" name="struts"
+          class="org.apache.struts2.util.DefaultContentTypeMatcher"/>
+
+    <bean type="org.apache.struts2.dispatcher.mapper.ActionMapper" name="struts"
+          class="org.apache.struts2.dispatcher.mapper.DefaultActionMapper"/>
+    <bean type="org.apache.struts2.dispatcher.mapper.ActionMapper" name="composite"
+          class="org.apache.struts2.dispatcher.mapper.CompositeActionMapper"/>
+    <bean type="org.apache.struts2.dispatcher.mapper.ActionMapper" name="prefix"
+          class="org.apache.struts2.dispatcher.mapper.PrefixBasedActionMapper"/>
+    <bean type="org.apache.struts2.dispatcher.mapper.ActionMapper" name="restful"
+          class="org.apache.struts2.dispatcher.mapper.RestfulActionMapper"/>
+    <bean type="org.apache.struts2.dispatcher.mapper.ActionMapper" name="restful2"
+          class="org.apache.struts2.dispatcher.mapper.Restful2ActionMapper"/>
+
+    <bean type="org.apache.struts2.dispatcher.multipart.MultiPartRequest" name="jakarta"
+          class="org.apache.struts2.dispatcher.multipart.JakartaMultiPartRequest" scope="prototype"/>
+    <bean type="org.apache.struts2.dispatcher.multipart.MultiPartRequest" name="jakarta-stream"
+          class="org.apache.struts2.dispatcher.multipart.JakartaStreamMultiPartRequest" scope="prototype"/>
+
+    <bean type="org.apache.struts2.views.TagLibraryModelProvider" name="s"
+          class="org.apache.struts2.views.DefaultTagLibrary"/>
+
+    <bean class="org.apache.struts2.views.freemarker.FreemarkerThemeTemplateLoader"/>
+    <bean class="org.apache.struts2.views.freemarker.FreemarkerManager" name="struts"/>
+
+    <bean class="org.apache.struts2.components.template.TemplateEngineManager"/>
+    <bean type="org.apache.struts2.components.template.TemplateEngine" name="ftl"
+          class="org.apache.struts2.components.template.FreemarkerTemplateEngine"/>
+    <bean type="org.apache.struts2.components.template.TemplateEngine" name="jsp"
+          class="org.apache.struts2.components.template.JspTemplateEngine"/>
+
+    <bean type="org.apache.struts2.conversion.impl.XWorkConverter" name="struts"
+          class="org.apache.struts2.conversion.impl.XWorkConverter"/>
+
+    <bean type="org.apache.struts2.conversion.ConversionPropertiesProcessor" name="struts"
+          class="org.apache.struts2.conversion.StrutsConversionPropertiesProcessor"/>
+    <bean type="org.apache.struts2.conversion.ConversionFileProcessor" name="struts"
+          class="org.apache.struts2.conversion.impl.DefaultConversionFileProcessor"/>
+    <bean type="org.apache.struts2.conversion.ConversionAnnotationProcessor" name="struts"
+          class="org.apache.struts2.conversion.impl.DefaultConversionAnnotationProcessor"/>
+    <bean type="org.apache.struts2.conversion.TypeConverterCreator" name="struts"
+          class="org.apache.struts2.conversion.StrutsTypeConverterCreator"/>
+    <bean type="org.apache.struts2.conversion.TypeConverterHolder" name="struts"
+          class="org.apache.struts2.conversion.StrutsTypeConverterHolder"/>
+
+    <bean class="org.apache.struts2.conversion.impl.XWorkBasicConverter"/>
+
+    <bean type="org.apache.struts2.conversion.impl.CollectionConverter" name="struts"
+          class="org.apache.struts2.conversion.impl.CollectionConverter" scope="singleton"/>
+    <bean type="org.apache.struts2.conversion.impl.ArrayConverter" name="struts"
+          class="org.apache.struts2.conversion.impl.ArrayConverter" scope="singleton"/>
+    <bean type="org.apache.struts2.conversion.impl.DateConverter" name="struts"
+          class="org.apache.struts2.conversion.impl.DateConverter" scope="singleton"/>
+    <bean type="org.apache.struts2.conversion.impl.NumberConverter" name="struts"
+          class="org.apache.struts2.conversion.impl.NumberConverter" scope="singleton"/>
+    <bean type="org.apache.struts2.conversion.impl.StringConverter" name="struts"
+          class="org.apache.struts2.conversion.impl.StringConverter" scope="singleton"/>
+
+    <bean type="org.apache.struts2.text.LocalizedTextProvider" name="global-only"
+          class="org.apache.struts2.text.GlobalLocalizedTextProvider" scope="singleton"/>
+    <bean type="org.apache.struts2.text.LocalizedTextProvider" name="struts"
+          class="org.apache.struts2.text.StrutsLocalizedTextProvider" scope="singleton"/>
+
+    <bean type="org.apache.struts2.text.TextProvider" name="system" class="org.apache.struts2.text.DefaultTextProvider"
+          scope="singleton"/>
+    <bean type="org.apache.struts2.text.TextProviderFactory" name="struts"
+          class="org.apache.struts2.text.StrutsTextProviderFactory" scope="singleton"/>
+    <bean type="org.apache.struts2.locale.LocaleProviderFactory" name="struts"
+          class="org.apache.struts2.locale.DefaultLocaleProviderFactory" scope="singleton"/>
+
+    <bean type="org.apache.struts2.components.UrlRenderer" name="struts"
+          class="org.apache.struts2.components.ServletUrlRenderer"/>
+    <bean type="org.apache.struts2.views.util.UrlHelper" name="struts"
+          class="org.apache.struts2.views.util.DefaultUrlHelper"/>
+
+    <bean type="org.apache.struts2.util.ValueStackFactory" name="struts"
+          class="org.apache.struts2.ognl.OgnlValueStackFactory"/>
+    <bean type="org.apache.struts2.util.reflection.ReflectionProvider" name="struts"
+          class="org.apache.struts2.ognl.OgnlReflectionProvider"/>
+    <bean type="org.apache.struts2.util.reflection.ReflectionContextFactory" name="struts"
+          class="org.apache.struts2.ognl.OgnlReflectionContextFactory"/>
+
+    <bean type="org.apache.struts2.conversion.NullHandler" name="java.lang.Object"
+          class="org.apache.struts2.conversion.impl.InstantiatingNullHandler"/>
+
+    <bean type="org.apache.struts2.validator.ActionValidatorManager" name="struts"
+          class="org.apache.struts2.validator.AnnotationActionValidatorManager"/>
+    <bean type="org.apache.struts2.validator.ActionValidatorManager" name="no-annotations"
+          class="org.apache.struts2.validator.DefaultActionValidatorManager"/>
+
+    <bean type="org.apache.struts2.validator.ValidatorFactory"
+          class="org.apache.struts2.validator.DefaultValidatorFactory"/>
+    <bean type="org.apache.struts2.validator.ValidatorFileParser"
+          class="org.apache.struts2.validator.DefaultValidatorFileParser"/>
+
+    <bean class="org.apache.struts2.ognl.OgnlUtil"/>
+    <bean name="struts" class="org.apache.struts2.ognl.SecurityMemberAccess" scope="prototype"/>
+    <bean type="org.apache.struts2.ognl.OgnlGuard" name="struts"
+          class="org.apache.struts2.ognl.StrutsOgnlGuard"/>
+    <bean class="org.apache.struts2.ognl.ProviderAllowlist"/>
+    <bean class="org.apache.struts2.ognl.ThreadAllowlist"/>
+
+    <bean type="org.apache.struts2.util.TextParser" name="struts"
+          class="org.apache.struts2.util.OgnlTextParser" scope="singleton"/>
+
+    <bean type="org.apache.struts2.ognl.accessor.RootAccessor" name="struts"
+          class="org.apache.struts2.ognl.accessor.CompoundRootAccessor"/>
+
+    <bean type="ognl.PropertyAccessor" name="java.lang.Object"
+          class="org.apache.struts2.ognl.accessor.ObjectAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="java.util.Iterator"
+          class="org.apache.struts2.ognl.accessor.XWorkIteratorPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="java.util.Enumeration"
+          class="org.apache.struts2.ognl.accessor.XWorkEnumerationAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="java.util.List"
+          class="org.apache.struts2.ognl.accessor.XWorkListPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="java.util.Set"
+          class="org.apache.struts2.ognl.accessor.XWorkCollectionPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="java.util.Map"
+          class="org.apache.struts2.ognl.accessor.XWorkMapPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="java.util.Collection"
+          class="org.apache.struts2.ognl.accessor.XWorkCollectionPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="org.apache.struts2.ognl.ObjectProxy"
+          class="org.apache.struts2.ognl.accessor.ObjectProxyPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="org.apache.struts2.dispatcher.HttpParameters"
+          class="org.apache.struts2.ognl.accessor.HttpParametersPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="org.apache.struts2.dispatcher.Parameter"
+          class="org.apache.struts2.ognl.accessor.ParameterPropertyAccessor"/>
+
+    <bean type="ognl.MethodAccessor" name="struts"
+          class="org.apache.struts2.ognl.accessor.XWorkMethodAccessor"/>
+
+    <bean type="org.apache.struts2.dispatcher.StaticContentLoader"
+          class="org.apache.struts2.dispatcher.DefaultStaticContentLoader" name="struts"/>
+    <bean type="org.apache.struts2.UnknownHandlerManager"
+          class="org.apache.struts2.DefaultUnknownHandlerManager" name="struts"/>
+
+    <bean type="org.apache.struts2.dispatcher.DispatcherErrorHandler" name="struts"
+          class="org.apache.struts2.dispatcher.DefaultDispatcherErrorHandler"/>
+
+    <!--  Silly workarounds for OGNL since there is currently no way to flush its internal caches -->
+    <bean type="ognl.PropertyAccessor" name="java.util.ArrayList"
+          class="org.apache.struts2.ognl.accessor.XWorkListPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="java.util.HashSet"
+          class="org.apache.struts2.ognl.accessor.XWorkCollectionPropertyAccessor"/>
+    <bean type="ognl.PropertyAccessor" name="java.util.HashMap"
+          class="org.apache.struts2.ognl.accessor.XWorkMapPropertyAccessor"/>
+
+    <bean type="org.apache.struts2.security.ExcludedPatternsChecker" name="struts"
+          class="org.apache.struts2.security.DefaultExcludedPatternsChecker" scope="prototype"/>
+    <bean type="org.apache.struts2.security.AcceptedPatternsChecker" name="struts"
+          class="org.apache.struts2.security.DefaultAcceptedPatternsChecker" scope="prototype"/>
+    <bean type="org.apache.struts2.security.NotExcludedAcceptedPatternsChecker" name="struts"
+          class="org.apache.struts2.security.DefaultNotExcludedAcceptedPatternsChecker" scope="singleton"/>
+
+    <bean type="org.apache.struts2.config.providers.ValueSubstitutor"
+          class="org.apache.struts2.config.providers.EnvsValueSubstitutor" scope="singleton"/>
+
+    <bean type="org.apache.struts2.components.date.DateFormatter" name="simpleDateFormatter"
+          class="org.apache.struts2.components.date.SimpleDateFormatAdapter" scope="singleton"/>
+    <bean type="org.apache.struts2.components.date.DateFormatter" name="dateTimeFormatter"
+          class="org.apache.struts2.components.date.DateTimeFormatterAdapter" scope="singleton"/>
+
+    <bean type="org.apache.struts2.ognl.ExpressionCacheFactory" name="struts"
+          class="org.apache.struts2.ognl.DefaultOgnlExpressionCacheFactory" scope="singleton"/>
+    <bean type="org.apache.struts2.ognl.BeanInfoCacheFactory" name="struts"
+          class="org.apache.struts2.ognl.DefaultOgnlBeanInfoCacheFactory" scope="singleton"/>
+
+    <bean type="org.apache.struts2.url.QueryStringBuilder" name="strutsQueryStringBuilder"
+          class="org.apache.struts2.url.StrutsQueryStringBuilder" scope="singleton"/>
+    <bean type="org.apache.struts2.url.QueryStringParser" name="strutsQueryStringParser"
+          class="org.apache.struts2.url.StrutsQueryStringParser" scope="singleton"/>
+    <bean type="org.apache.struts2.url.UrlEncoder" name="strutsUrlEncoder"
+          class="org.apache.struts2.url.StrutsUrlEncoder" scope="singleton"/>
+    <bean type="org.apache.struts2.url.UrlDecoder" name="strutsUrlDecoder"
+          class="org.apache.struts2.url.StrutsUrlDecoder" scope="singleton"/>
+
+    <bean type="org.apache.struts2.interceptor.exec.ExecutorProvider" name="struts"
+          class="org.apache.struts2.interceptor.exec.StrutsExecutorProvider"/>
+
+</struts>

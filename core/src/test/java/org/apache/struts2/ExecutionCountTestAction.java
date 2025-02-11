@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2;
 
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,9 +41,10 @@ public class ExecutionCountTestAction extends ActionSupport {
         return executionCount;
     }
 
+    @Override
     public String execute() throws Exception {
         executionCount++;
-        LOG.info("executing ExecutionCountTestAction. Current count is " + executionCount);
+        LOG.info("executing ExecutionCountTestAction. Current count is {}", executionCount);
 
         return SUCCESS;
     }

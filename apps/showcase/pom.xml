@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +24,7 @@
     <parent>
         <groupId>org.apache.struts</groupId>
         <artifactId>struts2-apps</artifactId>
-        <version>2.5.3-SNAPSHOT</version>
+        <version>7.0.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>struts2-showcase</artifactId>
@@ -52,28 +50,12 @@
 
         <dependency>
             <groupId>org.apache.struts</groupId>
-            <artifactId>struts2-sitemesh-plugin</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.struts</groupId>
             <artifactId>struts2-tiles-plugin</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.apache.struts</groupId>
-            <artifactId>struts2-dwr-plugin</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.struts</groupId>
             <artifactId>struts2-json-plugin</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tiles</groupId>
-            <artifactId>tiles-jsp</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -92,8 +74,31 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <groupId>org.apache.struts</groupId>
+            <artifactId>struts2-async-plugin</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.struts</groupId>
+            <artifactId>struts2-velocity-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.struts</groupId>
+            <artifactId>struts2-velocity-tools-view-jakarta</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.struts</groupId>
+            <artifactId>struts2-velocity-tools-jsp-jakarta</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.struts</groupId>
+            <artifactId>struts2-xslt-plugin</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -101,119 +106,181 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>${log4j2.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>${log4j2.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-jcl</artifactId>
-            <version>${log4j2.version}</version>
         </dependency>
-
-        <!-- Velocity -->
         <dependency>
-            <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity-tools</artifactId>
+           <groupId>org.sitemesh</groupId>
+           <artifactId>sitemesh</artifactId>
+           <version>3.2.2</version>
         </dependency>
 
-        <dependency>
-            <groupId>opensymphony</groupId>
-            <artifactId>sitemesh</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>uk.ltd.getahead</groupId>
-            <artifactId>dwr</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-        </dependency>
+       <dependency>
+           <groupId>junit</groupId>
+           <artifactId>junit</artifactId>
+           <scope>test</scope>
+       </dependency>
 
         <dependency>
-            <groupId>net.sourceforge.jwebunit</groupId>
-            <artifactId>jwebunit-core</artifactId>
-            <version>1.4.1</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-            <version>3.1</version>
-            <scope>test</scope>
-        </dependency>
+       <dependency>
+           <groupId>org.htmlunit</groupId>
+           <artifactId>htmlunit</artifactId>
+           <scope>test</scope>
+       </dependency>
 
+        <!-- BeanValidation Example -->
         <dependency>
-            <groupId>net.sourceforge.jwebunit</groupId>
-            <artifactId>jwebunit-htmlunit-plugin</artifactId>
-            <version>1.4.1</version>
-            <scope>test</scope>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate-validator.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>xom</groupId>
-                    <artifactId>xom</artifactId>
+                    <groupId>jakarta.validation</groupId>
+                    <artifactId>jakarta.validation-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
 
-        <!-- BeanValidation Example -->
+        <!--
+         Nashorn (the built-in JDK javascript engine) was deprecated in JDK 11 and removed in JDK 15
+         As a result attempting to use @ScriptAssert on JDK 17 leads to the exception
+         See more details
+         https://stackoverflow.com/questions/78008950/resolve-org-hibernate-validator-spi-scripting-scriptevaluatornotfoundexception
+         -->
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>5.1.3.Final</version>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-jsr223</artifactId>
+            <version>3.0.22</version>
         </dependency>
-
-        <!-- The Servlet API mocks in Spring Framework 4.x only supports Servlet 3.0 and higher.
-           This is only necessary in tests-->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.mortbay.jetty</groupId>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <executions>
+                <execution>
+                  <?m2e ignore?>
+                  <id>copy-dependencies</id>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>copy</goal>
+                  </goals>
+                  <configuration>
+                    <outputDirectory>${project.build.directory}/extraclasspath</outputDirectory>
+                    <artifactItems>
+                      <artifactItem>
+                        <groupId>org.apache.struts</groupId>
+                        <artifactId>struts2-velocity-tools-view-jakarta</artifactId>
+                        <destFileName>struts2-velocity-tools-view-jakarta.jar</destFileName>
+                      </artifactItem>
+                      <artifactItem>
+                        <groupId>org.apache.struts</groupId>
+                        <artifactId>struts2-velocity-tools-jsp-jakarta</artifactId>
+                        <destFileName>struts2-velocity-tools-jsp-jakarta.jar</destFileName>
+                      </artifactItem>
+                    </artifactItems>
+                    <overWriteReleases>false</overWriteReleases>
+                    <overWriteSnapshots>false</overWriteSnapshots>
+                    <overWriteIfNewer>true</overWriteIfNewer>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <includes>
+                        <include>it.org.apache.struts2.showcase.*Test</include>
+                    </includes>
+                    <systemPropertyVariables>
+                        <http.port>8090</http.port>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>verify</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
-                <version>8.1.16.v20140903</version>
+                <version>11.0.18</version>
                 <configuration>
                     <stopKey>CTRL+C</stopKey>
                     <stopPort>8999</stopPort>
                     <systemProperties>
                         <systemProperty>
-                            <name>log4j.configuration</name>
-                            <value>file:${basedir}/src/main/resources/log4j.properties</value>
-                        </systemProperty>
-                        <systemProperty>
                             <name>slf4j</name>
                             <value>false</value>
                         </systemProperty>
                     </systemProperties>
-                    <scanIntervalSeconds>10</scanIntervalSeconds>
-                    <webAppSourceDirectory>${basedir}/src/main/webapp/</webAppSourceDirectory>
-                    <webAppConfig>
-                        <contextPath>/struts2-showcase</contextPath>
-                        <descriptor>${basedir}/src/main/webapp/WEB-INF/web.xml</descriptor>
-                    </webAppConfig>
+                    <httpConnector>
+                        <port>8090</port>
+                    </httpConnector>
+                    <scan>10</scan>
+                    <webApp>
+                      <extraClasspath>
+                        ${project.build.directory}/extraclasspath/struts2-velocity-tools-view-jakarta.jar,
+                        ${project.build.directory}/extraclasspath/struts2-velocity-tools-jsp-jakarta
+                      </extraClasspath>
+                      <contextPath>/struts2-showcase</contextPath>
+                      <descriptor>${basedir}/src/main/webapp/WEB-INF/web.xml</descriptor>
+                    </webApp>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>start-jetty</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <!-- stop any previous instance to free up the port -->
+                            <goal>stop</goal>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop-jetty</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
              </plugin>
 
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <argLine>@{argLine}</argLine>
                     <excludes>
                         <exclude>it/**</exclude>
                         <exclude>**/*$*</exclude>

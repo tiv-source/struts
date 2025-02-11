@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,19 +18,19 @@
  * under the License.
  */
 -->
-<#if !parameters.labelposition?? && (parameters.form.labelposition)??>
-<#assign labelpos = parameters.form.labelposition/>
-<#elseif parameters.labelposition??>
-<#assign labelpos = parameters.labelposition/>
+<#if !attributes.labelPosition?? && (attributes.form.labelPosition)??>
+<#assign labelPos = attributes.form.labelPosition/>
+<#elseif attributes.labelPosition??>
+<#assign labelPos = attributes.labelPosition/>
 </#if>
-<#if (labelpos!"top") == 'top'>
+<#if (labelPos!"top") == 'top'>
 <div <#rt/>
 <#else>
 <span <#rt/>
 </#if>
     class="formButton"<#t/>
-<#if parameters.id??>
-    id="wwctrl_${parameters.id}"<#rt/>
+<#if attributes.id??>
+    id="wwctrl_${attributes.id}"<#rt/>
 </#if>
 ><#t/>
-<#include "/${parameters.templateDir}/simple/submit.ftl" />
+<#include "/${attributes.templateDir}/simple/submit.ftl" />

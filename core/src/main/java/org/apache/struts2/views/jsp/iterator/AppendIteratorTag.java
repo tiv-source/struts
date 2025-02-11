@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,18 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp.iterator;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.components.AppendIterator;
 import org.apache.struts2.components.Component;
 import org.apache.struts2.views.jsp.ContextBeanTag;
 
-import com.opensymphony.xwork2.util.ValueStack;
-
+import java.io.Serial;
 
 /**
  * Append a list of iterators. The values of the iterators will be merged
@@ -39,10 +35,19 @@ import com.opensymphony.xwork2.util.ValueStack;
  */
 public class AppendIteratorTag extends ContextBeanTag {
 
+    @Serial
     private static final long serialVersionUID = -6017337859763283691L;
 
+    @Override
     public Component getBean(ValueStack stack, HttpServletRequest req, HttpServletResponse res) {
         return new AppendIterator(stack);
     }
 
+    /**
+     * Must declare the setter at the descendant Tag class level in order for the tag handler to locate the method.
+     */
+    @Override
+    public void setPerformClearTagStateForTagPoolingServers(boolean performClearTagStateForTagPoolingServers) {
+        super.setPerformClearTagStateForTagPoolingServers(performClearTagStateForTagPoolingServers);
+    }
 }

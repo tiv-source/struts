@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,38 +24,30 @@
     <parent>
         <groupId>org.apache.struts</groupId>
         <artifactId>struts2-parent</artifactId>
-        <version>2.5.3-SNAPSHOT</version>
+        <version>7.0.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>struts2-plugins</artifactId>
     <packaging>pom</packaging>
-    <name>Struts Plugins</name>
+    <name>Struts 2 Plugins</name>
 
     <modules>
+        <module>async</module>
         <module>bean-validation</module>
         <module>cdi</module>
         <module>config-browser</module>
         <module>convention</module>
-        <module>dwr</module>
-        <module>embeddedjsp</module>
-        <module>gxp</module>
         <module>jasperreports</module>
         <module>javatemplates</module>
         <module>jfreechart</module>
         <module>json</module>
         <module>junit</module>
-        <module>osgi</module>
-        <module>oval</module>
-        <module>pell-multipart</module>
-        <module>plexus</module>
-        <module>portlet</module>
-        <module>portlet-tiles</module>
         <module>rest</module>
-        <module>sitegraph</module>
-        <module>sitemesh</module>
         <module>spring</module>
         <module>testng</module>
         <module>tiles</module>
+        <module>velocity</module>
+        <module>xslt</module>
     </modules>
 
     <dependencies>
@@ -65,6 +55,7 @@
         <dependency>
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-core</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Test dependencies -->
@@ -73,10 +64,31 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
 

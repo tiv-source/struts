@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,26 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.rest;
 
-import com.opensymphony.xwork2.*;
-import com.opensymphony.xwork2.config.ConfigurationException;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.config.entities.ResultConfig;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.interceptor.ValidationAware;
-import com.opensymphony.xwork2.util.profiling.UtilTimerStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.DefaultActionInvocation;
+import org.apache.struts2.ModelDriven;
 import org.apache.struts2.ServletActionContext;
-import org.apache.struts2.result.HttpHeaderResult;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.config.entities.ResultConfig;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.interceptor.ValidationAware;
 import org.apache.struts2.rest.handler.ContentTypeHandler;
 import org.apache.struts2.rest.handler.HtmlHandler;
+import org.apache.struts2.result.HttpHeaderResult;
+import org.apache.struts2.result.Result;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,8 +48,6 @@ import java.util.Map;
  * as well as apply content type-specific operations to the result.
  */
 public class RestActionInvocation extends DefaultActionInvocation {
-
-    private static final long serialVersionUID = 3485701178946428716L;
 
     private static final Logger LOG = LogManager.getLogger(RestActionInvocation.class);
 
@@ -67,12 +65,12 @@ public class RestActionInvocation extends DefaultActionInvocation {
         super(extraContext, pushAction);
     }
 
-    @Inject("struts.rest.logger")
+    @Inject(RestConstants.REST_LOGGER)
     public void setLogger(String logger) {
         this.logger = BooleanUtils.toBoolean(logger);
     }
 
-    @Inject("struts.rest.defaultErrorResultName")
+    @Inject(RestConstants.REST_DEFAULT_ERROR_RESULT_NAME)
     public void setDefaultErrorResultName(String defaultErrorResultName) {
         this.defaultErrorResultName = defaultErrorResultName;
     }
@@ -80,10 +78,10 @@ public class RestActionInvocation extends DefaultActionInvocation {
     /**
      * If set to true (by default) blocks returning content from any other methods than GET,
      * if set to false, the content can be returned for any kind of method
-     * 
+     *
      * @param restrictToGet true or false
      */
-    @Inject(value = "struts.rest.content.restrictToGET", required = false)
+    @Inject(value = RestConstants.REST_CONTENT_RESTRICT_TO_GET, required = false)
     public void setRestrictToGet(String restrictToGet) {
         this.restrictToGet = BooleanUtils.toBoolean(restrictToGet);
     }
@@ -167,37 +165,29 @@ public class RestActionInvocation extends DefaultActionInvocation {
     }
 
     protected void processResult() throws Exception {
-        String timerKey = "processResult: " + getResultCode();
-        try {
-            UtilTimerStack.push(timerKey);
+        HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
 
-            HttpServletRequest request = ServletActionContext.getRequest();
-            HttpServletResponse response = ServletActionContext.getResponse();
+        // Select the target
+        selectTarget();
 
-            // Select the target
-            selectTarget();
+        // Get the httpHeaders
+        if (httpHeaders == null) {
+            httpHeaders = new DefaultHttpHeaders(resultCode);
+        }
 
-            // Get the httpHeaders
-            if (httpHeaders == null) {
-                httpHeaders = new DefaultHttpHeaders(resultCode);
-            }
+        // Apply headers
+        if (!hasErrors) {
+            httpHeaders.apply(request, response, target);
+        } else {
+            disableCatching(response);
+        }
 
-            // Apply headers
-            if (!hasErrors) {
-                httpHeaders.apply(request, response, target);
-            } else {
-                disableCatching(response);
-            }
-
-            // Don't return content on a not modified
-            if (httpHeaders.getStatus() != HttpServletResponse.SC_NOT_MODIFIED ) {
-                executeResult();
-            } else {
-                LOG.debug("Result not processed because the status code is not modified.");
-            }
-
-        } finally {
-            UtilTimerStack.pop(timerKey);
+        // Don't return content on a not modified
+        if (httpHeaders.getStatus() != HttpServletResponse.SC_NOT_MODIFIED ) {
+            executeResult();
+        } else {
+            LOG.debug("Result not processed because the status code is not modified.");
         }
     }
 
@@ -224,7 +214,7 @@ public class RestActionInvocation extends DefaultActionInvocation {
         if (handler != null && !(handler instanceof HtmlHandler)) {
 
             // Specific representation (json, xml...)
-            resultCode = handlerSelector.handleResult(this.getProxy().getConfig(), httpHeaders, target);
+            resultCode = handlerSelector.handleResult(this, httpHeaders, target);
         } else {
             // Normal struts execution (html o other struts result)
             findResult();

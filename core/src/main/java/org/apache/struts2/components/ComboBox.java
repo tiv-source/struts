@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.util.MakeIterator;
 import org.apache.struts2.views.annotations.StrutsTag;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -129,8 +126,7 @@ public class ComboBox extends TextField {
         }
 
         if (value != null) {
-            if (value instanceof Collection) {
-                Collection tmp = (Collection) value;
+            if (value instanceof Collection tmp) {
                 addParameter("list", tmp);
                 if (listKey != null) {
                     addParameter("listKey", listKey);
@@ -138,11 +134,10 @@ public class ComboBox extends TextField {
                 if (listValue != null) {
                     addParameter("listValue", listValue);
                 }
-            } else if (value instanceof Map) {
-                Map tmp = (Map) value;
+            } else if (value instanceof Map tmp) {
                 addParameter("list", MakeIterator.convert(tmp));
                 addParameter("listKey", "key");
-                addParameter("listValue", "value");                
+                addParameter("listValue", "value");
             } else { // also covers "if (value.getClass().isArray())"
                 Iterator i = MakeIterator.convert(value);
                 addParameter("list", i);

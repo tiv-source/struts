@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,57 +18,63 @@
  * under the License.
  */
 -->
-<#if parameters.type?? && parameters.type=="button">
+<#if attributes.type?? && attributes.type=="button">
 <button type="reset"<#rt/>
-<#if parameters.name?has_content>
- name="${parameters.name?html}"<#rt/>
+<#if attributes.name?has_content>
+ name="${attributes.name}"<#rt/>
 </#if>
-<#if parameters.nameValue??>
- value="<@s.property value="parameters.nameValue"/>"<#rt/>
+<#if attributes.nameValue??>
+ value="<@s.property value="attributes.nameValue"/>"<#rt/>
 </#if>
-<#if parameters.cssClass?has_content>
- class="${parameters.cssClass?html}"<#rt/>
+<#if attributes.cssClass?has_content>
+ class="${attributes.cssClass}"<#rt/>
 </#if>
-<#if parameters.cssStyle?has_content>
- style="${parameters.cssStyle?html}"<#rt/>
+<#if attributes.cssStyle?has_content>
+ style="${attributes.cssStyle}"<#rt/>
 </#if>
-<#if parameters.disabled!false>
+<#if attributes.disabled!false>
  disabled="disabled"<#rt/>
 </#if>
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/scripting-events.ftl"/>
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/common-attributes.ftl" />
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/dynamic-attributes.ftl" />
-><#if parameters.src?has_content>
+<#if attributes.tabindex?has_content>
+ tabindex="${attributes.tabindex}"<#rt/>
+</#if>
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/scripting-events.ftl"/>
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/common-attributes.ftl" />
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/dynamic-attributes.ftl" />
+><#if attributes.src?has_content>
 <img<#rt/>
-<#if parameters.label?has_content>
- alt="${parameters.label?html}"<#rt/>
+<#if attributes.label?has_content>
+ alt="${attributes.label}"<#rt/>
 </#if>
-<#if parameters.src?has_content>
- src="${parameters.src?html}"<#rt/>
+<#if attributes.src?has_content>
+ src="${attributes.src}"<#rt/>
 </#if>
-/><#else><#if parameters.label?has_content><@s.property value="parameters.label"/><#rt/></#if></#if></button>
+/><#else><#if attributes.label?has_content><@s.property value="attributes.label"/><#rt/></#if></#if></button>
 <#else>
 <input type="reset"<#rt/>
-<#if parameters.name?has_content>
- name="${parameters.name?html}"<#rt/>
+<#if attributes.name?has_content>
+ name="${attributes.name}"<#rt/>
 </#if>
-<#if parameters.nameValue??>
- value="<@s.property value="parameters.nameValue"/>"<#rt/>
+<#if attributes.nameValue??>
+ value="<@s.property value="attributes.nameValue"/>"<#rt/>
 </#if>
-<#if parameters.cssClass?has_content>
- class="${parameters.cssClass?html}"<#rt/>
+<#if attributes.cssClass?has_content>
+ class="${attributes.cssClass}"<#rt/>
 </#if>
-<#if parameters.cssStyle?has_content>
- style="${parameters.cssStyle?html}"<#rt/>
+<#if attributes.cssStyle?has_content>
+ style="${attributes.cssStyle}"<#rt/>
 </#if>
-<#if parameters.title?has_content>
- title="${parameters.title?html}"<#rt/>
+<#if attributes.title?has_content>
+ title="${attributes.title}"<#rt/>
 </#if>
-<#if parameters.disabled!false>
+<#if attributes.disabled!false>
  disabled="disabled"<#rt/>
 </#if>
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/scripting-events.ftl" />
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/common-attributes.ftl" />
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/dynamic-attributes.ftl" />
+<#if attributes.tabindex?has_content>
+ tabindex="${attributes.tabindex}"<#rt/>
+</#if>
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/scripting-events.ftl" />
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/common-attributes.ftl" />
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/dynamic-attributes.ftl" />
 />
 </#if>

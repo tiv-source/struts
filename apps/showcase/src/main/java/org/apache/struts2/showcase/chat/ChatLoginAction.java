@@ -20,8 +20,9 @@
  */
 package org.apache.struts2.showcase.chat;
 
-import com.opensymphony.xwork2.ActionSupport;
-import org.apache.struts2.interceptor.SessionAware;
+import org.apache.struts2.ActionSupport;
+import org.apache.struts2.action.SessionAware;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public class ChatLoginAction extends ActionSupport implements SessionAware {
 	private static final long serialVersionUID = 1L;
 
 	private ChatService chatService;
-	private Map session;
+	private Map<String, Object> session;
 
 	private String name;
 
@@ -42,6 +43,7 @@ public class ChatLoginAction extends ActionSupport implements SessionAware {
 		return this.name;
 	}
 
+	@StrutsParameter
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -60,8 +62,8 @@ public class ChatLoginAction extends ActionSupport implements SessionAware {
 	}
 
 
-	// === SessionAware ===
-	public void setSession(Map session) {
-		this.session = session;
-	}
+    @Override
+    public void withSession(Map<String, Object> session) {
+        this.session = session;
+    }
 }

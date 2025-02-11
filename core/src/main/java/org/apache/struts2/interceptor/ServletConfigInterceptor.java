@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,29 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.interceptor;
 
-import java.util.Map;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.interceptor.AbstractInterceptor;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.StrutsStatics;
+import org.apache.struts2.action.ApplicationAware;
+import org.apache.struts2.action.ParametersAware;
+import org.apache.struts2.action.PrincipalAware;
+import org.apache.struts2.action.ServletContextAware;
+import org.apache.struts2.action.ServletRequestAware;
+import org.apache.struts2.action.ServletResponseAware;
+import org.apache.struts2.action.SessionAware;
 import org.apache.struts2.interceptor.servlet.ServletPrincipalProxy;
-import org.apache.struts2.util.ServletContextAware;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
-
+import java.io.Serial;
 
 /**
  * <!-- START SNIPPET: description -->
  * <p>
  * An interceptor which sets action properties based on the interfaces an action implements. For example, if the action
- * implements {@link ParameterAware} then the action context's parameter map will be set on it.
+ * implements {@link ParametersAware} then the action context's parameter map will be set on it.
  * </p>
  *
  * <p>This interceptor is designed to set all properties an action needs if it's aware of servlet parameters, the
@@ -48,23 +48,14 @@ import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
  * </p>
  *
  * <ul>
- *
  * <li>{@link ServletContextAware}</li>
- *
  * <li>{@link ServletRequestAware}</li>
- *
  * <li>{@link ServletResponseAware}</li>
- *
- * <li>{@link ParameterAware}</li>
- *
- * <li>{@link RequestAware}</li>
- *
+ * <li>{@link ParametersAware}</li>
+ * <li>{@link ServletRequestAware}</li>
  * <li>{@link SessionAware}</li>
- *
  * <li>{@link ApplicationAware}</li>
- *
  * <li>{@link PrincipalAware}</li>
- *
  * </ul>
  *
  * <!-- END SNIPPET: description -->
@@ -102,15 +93,17 @@ import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
  * </pre>
  *
  * @see ServletContextAware
+ * @see org.apache.struts2.action.ServletContextAware
  * @see ServletRequestAware
  * @see ServletResponseAware
- * @see ParameterAware
+ * @see ParametersAware
  * @see SessionAware
  * @see ApplicationAware
  * @see PrincipalAware
  */
 public class ServletConfigInterceptor extends AbstractInterceptor implements StrutsStatics {
 
+    @Serial
     private static final long serialVersionUID = 605261777858676638L;
 
     /**
@@ -120,47 +113,46 @@ public class ServletConfigInterceptor extends AbstractInterceptor implements Str
      * @param invocation an encapsulation of the action execution state.
      * @throws Exception if an error occurs when setting action properties.
      */
+    @Override
     public String intercept(ActionInvocation invocation) throws Exception {
         final Object action = invocation.getAction();
         final ActionContext context = invocation.getInvocationContext();
 
         if (action instanceof ServletRequestAware) {
-            HttpServletRequest request = (HttpServletRequest) context.get(HTTP_REQUEST);
-            ((ServletRequestAware) action).setServletRequest(request);
+            HttpServletRequest request = context.getServletRequest();
+            ((ServletRequestAware) action).withServletRequest(request);
         }
 
         if (action instanceof ServletResponseAware) {
-            HttpServletResponse response = (HttpServletResponse) context.get(HTTP_RESPONSE);
-            ((ServletResponseAware) action).setServletResponse(response);
+            HttpServletResponse response = context.getServletResponse();
+            ((ServletResponseAware) action).withServletResponse(response);
         }
 
-        if (action instanceof ParameterAware) {
-            ((ParameterAware) action).setParameters(context.getParameters());
+        if (action instanceof ParametersAware) {
+            ((ParametersAware) action).withParameters(context.getParameters());
         }
 
         if (action instanceof ApplicationAware) {
-            ((ApplicationAware) action).setApplication(context.getApplication());
+            ((ApplicationAware) action).withApplication(context.getApplication());
         }
-        
+
         if (action instanceof SessionAware) {
-            ((SessionAware) action).setSession(context.getSession());
-        }
-        
-        if (action instanceof RequestAware) {
-            ((RequestAware) action).setRequest((Map) context.get("request"));
+            ((SessionAware) action).withSession(context.getSession());
         }
 
         if (action instanceof PrincipalAware) {
-            HttpServletRequest request = (HttpServletRequest) context.get(HTTP_REQUEST);
+            HttpServletRequest request = context.getServletRequest();
             if(request != null) {
-                // We are in servtlet environment, so principal information resides in HttpServletRequest
-                ((PrincipalAware) action).setPrincipalProxy(new ServletPrincipalProxy(request));
+                // We are in servlet environment, so principal information resides in HttpServletRequest
+                ((PrincipalAware) action).withPrincipalProxy(new ServletPrincipalProxy(request));
             }
         }
+
         if (action instanceof ServletContextAware) {
-            ServletContext servletContext = (ServletContext) context.get(SERVLET_CONTEXT);
-            ((ServletContextAware) action).setServletContext(servletContext);
+            ServletContext servletContext = context.getServletContext();
+            ((ServletContextAware) action).withServletContext(servletContext);
         }
+
         return invocation.invoke();
     }
 }

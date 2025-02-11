@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,18 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.dispatcher.mapper;
 
-import com.opensymphony.xwork2.config.ConfigurationManager;
-import com.opensymphony.xwork2.inject.Container;
-import com.opensymphony.xwork2.inject.Inject;
+import org.apache.struts2.config.ConfigurationManager;
+import org.apache.struts2.inject.Container;
+import org.apache.struts2.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.StrutsConstants;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,9 +54,9 @@ public class CompositeActionMapper implements ActionMapper {
                                  @Inject(value = StrutsConstants.STRUTS_MAPPER_COMPOSITE) String list) {
         String[] arr = StringUtils.split(StringUtils.trimToEmpty(list), ",");
         for (String name : arr) {
-            Object obj = container.getInstance(ActionMapper.class, name);
+            ActionMapper obj = container.getInstance(ActionMapper.class, name);
             if (obj != null) {
-                actionMappers.add((ActionMapper) obj);
+                actionMappers.add(obj);
             }
         }
     }

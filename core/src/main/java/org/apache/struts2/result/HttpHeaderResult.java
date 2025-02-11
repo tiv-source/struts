@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,22 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.result;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.Result;
-import com.opensymphony.xwork2.util.TextParseUtil;
-import com.opensymphony.xwork2.util.ValueStack;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.util.TextParseUtil;
+import org.apache.struts2.util.ValueStack;
 
-import javax.servlet.http.HttpServletResponse;
+import java.io.Serial;
 import java.util.HashMap;
 import java.util.Map;
-
 
 /**
  * <!-- START SNIPPET: description -->
@@ -80,6 +74,7 @@ import java.util.Map;
  */
 public class HttpHeaderResult implements Result {
 
+    @Serial
     private static final long serialVersionUID = 195648957144219214L;
     private static final Logger LOG = LogManager.getLogger(HttpHeaderResult.class);
 
@@ -89,7 +84,7 @@ public class HttpHeaderResult implements Result {
     public static final String DEFAULT_PARAM = null;
 
     private boolean parse = true;
-    private Map<String, String> headers;
+    private final Map<String, String> headers;
     private int status = -1;
     private String error = null;
     private String errorMessage;
@@ -109,7 +104,7 @@ public class HttpHeaderResult implements Result {
      * Sets the http servlet error code that should be set on the response
      *
      * @param error the Http error code
-     * @see javax.servlet.http.HttpServletResponse#sendError(int)
+     * @see jakarta.servlet.http.HttpServletResponse#sendError(int)
      */
     public void setError(String error) {
         this.error = error;
@@ -119,7 +114,7 @@ public class HttpHeaderResult implements Result {
      * Sets the error message that should be set on the reponse
      *
      * @param errorMessage error message send to the client
-     * @see javax.servlet.http.HttpServletResponse#sendError(int, String)
+     * @see jakarta.servlet.http.HttpServletResponse#sendError(int, String)
      */
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
@@ -148,7 +143,7 @@ public class HttpHeaderResult implements Result {
      * Sets the http servlet response status code that should be set on a response.
      *
      * @param status the Http status code
-     * @see javax.servlet.http.HttpServletResponse#setStatus(int)
+     * @see jakarta.servlet.http.HttpServletResponse#setStatus(int)
      */
     public void setStatus(int status) {
         this.status = status;
@@ -176,8 +171,12 @@ public class HttpHeaderResult implements Result {
      * @throws Exception if an error occurs when re-setting the headers.
      */
     public void execute(ActionInvocation invocation) throws Exception {
-        HttpServletResponse response = ServletActionContext.getResponse();
-        ValueStack stack = ActionContext.getContext().getValueStack();
+        if (invocation == null) {
+            throw new IllegalArgumentException("Invocation cannot be null!");
+        }
+
+        HttpServletResponse response = invocation.getInvocationContext().getServletResponse();
+        ValueStack stack = invocation.getStack();
 
         if (status != -1) {
             response.setStatus(status);

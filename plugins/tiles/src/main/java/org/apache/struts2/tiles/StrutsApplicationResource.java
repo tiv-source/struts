@@ -16,36 +16,59 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.tiles;
 
 import org.apache.tiles.request.locale.PostfixedApplicationResource;
+import org.apache.tiles.request.locale.URLApplicationResource;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 
 public class StrutsApplicationResource extends PostfixedApplicationResource {
 
     private final URL url;
+    private final File file;
+
+    /**
+     * fixes WW-5011
+     * @return file path for "file" protocol elsewhere url path as before to keep backward-compatibility
+     * @see URLApplicationResource#getFile(URL)
+     */
+    private static String getFilePath(URL url) {
+        String path = url.getPath();
+        if (!"file".equals(url.getProtocol())) {
+            return path;
+        }
+        try {
+            // fixes WW-5011 because includes ref in path - like URLApplicationResource#getFile(URL)
+            path = (new URI(url.toExternalForm())).getSchemeSpecificPart();
+        } catch (Exception e) {
+            // fallback solution
+            if (url.getRef() != null && !new File(path).exists()) {
+                // it's like WW-5011
+                path += "#" + url.getRef();
+            }
+        }
+
+        return path;
+    }
 
     public StrutsApplicationResource(URL url) {
-        super(url.getPath());
+        super(getFilePath(url));
         this.url = url;
+        this.file = new File(getFilePath(url));
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
-        if (new File(url.getPath()).exists()) {
-            return url.openStream();
-        }
-        return null;
+        return url.openStream();
     }
 
     @Override
     public long getLastModified() throws IOException {
-        File file = new File(url.getPath());
         if (file.exists()) {
             return file.lastModified();
         }

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,46 +16,53 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.dispatcher.mapper;
 
-import com.opensymphony.xwork2.config.ConfigurationManager;
-import com.opensymphony.xwork2.inject.Inject;
+import org.apache.struts2.config.ConfigurationManager;
+import org.apache.struts2.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.StrutsConstants;
-import org.apache.struts2.util.URLDecoderUtil;
+import org.apache.struts2.url.UrlDecoder;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
 /**
  * Extended version of {@link RestfulActionMapper}, see documentation for more details
- * http://struts.apache.org/docs/restfulactionmapper.html
+ * <a href="https://struts.apache.org/core-developers/restful-action-mapper.html">Restful2ActionMapper</a>
  */
 public class Restful2ActionMapper extends DefaultActionMapper {
 
-    protected static final Logger LOG = LogManager.getLogger(Restful2ActionMapper.class);
+    private static final Logger LOG = LogManager.getLogger(Restful2ActionMapper.class);
+
     public static final String HTTP_METHOD_PARAM = "__http_method";
+
     private String idParameterName = null;
-    
+    private UrlDecoder decoder;
+
     public Restful2ActionMapper() {
-    	setSlashesInActionNames("true");
+    setSlashesInActionNames("true");
+    }
+
+    @Inject
+    public void setDecoder(UrlDecoder decoder) {
+        this.decoder = decoder;
     }
 
     /*
     * (non-Javadoc)
     *
-    * @see org.apache.struts2.dispatcher.mapper.ActionMapper#getMapping(javax.servlet.http.HttpServletRequest)
+    * @see org.apache.struts2.dispatcher.mapper.ActionMapper#getMapping(jakarta.servlet.http.HttpServletRequest)
     */
     public ActionMapping getMapping(HttpServletRequest request, ConfigurationManager configManager) {
-    	if (!isSlashesInActionNames()) {
-    		throw new IllegalStateException("This action mapper requires the setting 'slashesInActionNames' to be set to 'true'");
-    	}
+       if (!isSlashesInActionNames()) {
+            throw new IllegalStateException("This action mapper requires the setting 'slashesInActionNames' to be set to 'true'");
+       }
         ActionMapping mapping = super.getMapping(request, configManager);
-        
+
         if (mapping == null) {
             return null;
         }
@@ -81,7 +86,7 @@ public class Restful2ActionMapper extends DefaultActionMapper {
                     // Index e.g. foo/
                     if (isGet(request)) {
                         mapping.setMethod("index");
-                        
+
                     // Creating a new entry on POST e.g. foo/
                     } else if (isPost(request)) {
                         mapping.setMethod("create");
@@ -99,22 +104,22 @@ public class Restful2ActionMapper extends DefaultActionMapper {
                     // Removing an item e.g. foo/1
                     } else if (isDelete(request)) {
                         mapping.setMethod("remove");
-                    
-                    // Updating an item e.g. foo/1    
+
+                    // Updating an item e.g. foo/1
                     }  else if (isPut(request)) {
                         mapping.setMethod("update");
                     }
-                    
+
                 }
-                
+
                 if (idParameterName != null && lastSlashPos > -1) {
-                	actionName = actionName.substring(0, lastSlashPos);
+                    actionName = actionName.substring(0, lastSlashPos);
                 }
             }
 
             if (idParameterName != null && id != null) {
                 if (mapping.getParams() == null) {
-                    mapping.setParams(new HashMap<String, Object>());
+                    mapping.setParams(new HashMap<>());
                 }
                 mapping.getParams().put(idParameterName, id);
             }
@@ -132,26 +137,26 @@ public class Restful2ActionMapper extends DefaultActionMapper {
 
                     while (st.hasMoreTokens()) {
                         if (isNameTok) {
-                            paramName = URLDecoderUtil.decode(st.nextToken(), "UTF-8");
+                            paramName = decoder.decode(st.nextToken(), "UTF-8", false);
                             isNameTok = false;
                         } else {
-                            paramValue = URLDecoderUtil.decode(st.nextToken(), "UTF-8");
+                            paramValue = decoder.decode(st.nextToken(), "UTF-8", false);
 
-                            if ((paramName != null) && (paramName.length() > 0)) {
+                            if (paramName != null && !paramName.isEmpty()) {
                                 parameters.put(paramName, paramValue);
                             }
 
                             isNameTok = true;
                         }
                     }
-                    if (parameters.size() > 0) {
+                    if (!parameters.isEmpty()) {
                         if (mapping.getParams() == null) {
-                            mapping.setParams(new HashMap<String, Object>());
+                            mapping.setParams(new HashMap<>());
                         }
                         mapping.getParams().putAll(parameters);
                     }
                 } catch (Exception e) {
-                	LOG.warn("Unable to determine parameters from the url", e);
+                    LOG.warn("Unable to determine parameters from the url", e);
                 }
                 mapping.setName(actionName.substring(actionSlashPos+1));
             }
@@ -184,12 +189,12 @@ public class Restful2ActionMapper extends DefaultActionMapper {
         }
     }
 
-	public String getIdParameterName() {
-		return idParameterName;
-	}
+    public String getIdParameterName() {
+        return idParameterName;
+    }
 
-	@Inject(required=false,value=StrutsConstants.STRUTS_ID_PARAMETER_NAME)
-	public void setIdParameterName(String idParameterName) {
-		this.idParameterName = idParameterName;
-	}
+    @Inject(required = false, value = StrutsConstants.STRUTS_ID_PARAMETER_NAME)
+    public void setIdParameterName(String idParameterName) {
+        this.idParameterName = idParameterName;
+    }
 }

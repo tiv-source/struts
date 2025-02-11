@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,17 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.struts2.util.TextProviderHelper;
 import org.apache.struts2.views.annotations.StrutsTag;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
-import org.apache.struts2.util.TextProviderHelper;
-
-import com.opensymphony.xwork2.util.ValueStack;
 
 /**
  * <!-- START SNIPPET: javadoc -->
@@ -84,14 +79,14 @@ public class Label extends UIBean {
         if (value != null) {
             addParameter("nameValue", findString(value));
         } else if (key != null) {
-            Object nameValue = parameters.get("nameValue");
-            if (nameValue == null || nameValue.toString().length() == 0) {
+            Object nameValue = attributes.get("nameValue");
+            if (nameValue == null || nameValue.toString().isEmpty()) {
                 // get the label from a TextProvider (default value is the key)
                 String providedLabel = TextProviderHelper.getText(key, key, stack);
                 addParameter("nameValue", providedLabel);
             }
         } else if (name != null) {
-            String expr = completeExpressionIfAltSyntax(name);
+            String expr = completeExpression(name);
             addParameter("nameValue", findString(expr));
         }
     }

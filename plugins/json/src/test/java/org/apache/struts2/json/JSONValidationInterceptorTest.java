@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,31 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.json;
 
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionSupport;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.mock.MockActionInvocation;
-import com.opensymphony.xwork2.mock.MockActionProxy;
-import com.opensymphony.xwork2.validator.annotations.EmailValidator;
-import com.opensymphony.xwork2.validator.annotations.IntRangeFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.StringLengthFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.RequiredStringValidator;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionSupport;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.mock.MockActionInvocation;
+import org.apache.struts2.mock.MockActionProxy;
+import org.apache.struts2.validator.annotations.EmailValidator;
+import org.apache.struts2.validator.annotations.IntRangeFieldValidator;
+import org.apache.struts2.validator.annotations.RequiredStringValidator;
+import org.apache.struts2.validator.annotations.StringLengthFieldValidator;
 import org.apache.struts2.StrutsStatics;
-import org.apache.struts2.StrutsTestCase;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 import org.apache.struts2.interceptor.validation.AnnotationValidationInterceptor;
 import org.apache.struts2.interceptor.validation.SkipValidation;
+import org.apache.struts2.junit.StrutsTestCase;
+import org.apache.struts2.junit.util.TestUtils;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class JSONValidationInterceptorTest extends StrutsTestCase {
 
@@ -55,15 +54,14 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
     private AnnotationValidationInterceptor validationInterceptor;
 
     public void testValidationFails() throws Exception {
-        
+
         action.addActionError("General error");
-        
+
         Map parameters = new HashMap();
         parameters.put("struts.enableJSONValidation", "true");
         request.setParameterMap(parameters);
-        
+
         validationInterceptor.intercept(invocation);
-        interceptor.setValidationFailedStatus(HttpServletResponse.SC_BAD_REQUEST);
         interceptor.intercept(invocation);
 
         String json = stringWriter.toString();
@@ -72,11 +70,11 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
 
         //json
         assertThat(normalizedActual)
-                .contains("\"errors\":[\"Generalerror\"]")
-                .contains("\"fieldErrors\":{")
-                .contains("\"value\":[\"Minvalueis-1\"]")
-                .contains("\"text\":[\"Tooshort\",\"Thisisnoemail\"]")
-                .contains("\"password\":[\"Passwordisn'tcorrect\"]");
+            .contains("\"errors\":[\"Generalerror\"]")
+            .contains("\"fieldErrors\":{")
+            .contains("\"value\":[\"Minvalueis-1\"]")
+            .contains("\"text\":[\"Tooshort\",\"Thisisnoemail\"]")
+            .contains("\"password\":[\"Passwordisn'tcorrect\"]");
 
         //execution
         assertFalse(action.isExecuted());
@@ -92,7 +90,7 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
         action.setText("abcd@ggg.com");
         action.setPassword("apassword");
         action.setValue(10);
-        
+
         Map parameters = new HashMap();
         parameters.put("struts.enableJSONValidation", "true");
         request.setParameterMap(parameters);
@@ -105,7 +103,7 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
         String normalizedActual = TestUtils.normalize(json, true);
         assertEquals("", normalizedActual);
     }
-    
+
     public void testValidationSucceedsValidateOnly() throws Exception {
         JSONValidationInterceptor interceptor = new JSONValidationInterceptor();
 
@@ -118,7 +116,55 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
         parameters.put("struts.validateOnly", "true");
         parameters.put("struts.enableJSONValidation", "true");
         request.setParameterMap(parameters);
-        
+
+        validationInterceptor.intercept(invocation);
+        interceptor.intercept(invocation);
+
+        String json = stringWriter.toString();
+
+        String normalizedActual = TestUtils.normalize(json, true);
+        assertEquals("{}", normalizedActual);
+        assertFalse(action.isExecuted());
+        assertEquals("application/json", response.getContentType());
+        assertEquals("UTF-8", response.getCharacterEncoding());
+    }
+
+    public void testValidationSucceedsWithDifferentParamName() throws Exception {
+        JSONValidationInterceptor interceptor = new JSONValidationInterceptor();
+        interceptor.setValidateJsonParam("enableJSONValidation");
+
+        action.setText("abcd@ggg.com");
+        action.setPassword("apassword");
+        action.setValue(10);
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("enableJSONValidation", "true");
+        request.setParameterMap(parameters);
+
+        validationInterceptor.intercept(invocation);
+        interceptor.intercept(invocation);
+
+        String json = stringWriter.toString();
+
+        String normalizedActual = TestUtils.normalize(json, true);
+        assertEquals("", normalizedActual);
+    }
+
+    public void testValidationSucceedsValidateOnlyWithDifferentParamName() throws Exception {
+        JSONValidationInterceptor interceptor = new JSONValidationInterceptor();
+        interceptor.setValidateOnlyParam("validateOnly");
+        interceptor.setValidateJsonParam("enableJSONValidation");
+
+        action.setText("abcd@ggg.com");
+        action.setPassword("apassword");
+        action.setValue(10);
+
+        //just validate
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("validateOnly", "true");
+        parameters.put("enableJSONValidation", "true");
+        request.setParameterMap(parameters);
+
         validationInterceptor.intercept(invocation);
         interceptor.intercept(invocation);
 
@@ -153,7 +199,7 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
 
         context.put(StrutsStatics.SERVLET_CONTEXT, servletContext);
         invocation = new MockActionInvocation();
-        ActionContext.getContext().setActionInvocation(invocation);
+        ActionContext.getContext().withActionInvocation(invocation);
         invocation.setAction(action);
         invocation.setInvocationContext(context);
         MockActionProxy proxy = new MockActionProxy();
@@ -169,6 +215,7 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
         private boolean executed = false;
         private String password;
 
+        @Override
         public String execute() {
             executed = true;
             return Action.SUCCESS;
@@ -185,11 +232,13 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
 
         @StringLengthFieldValidator(minLength = "2", message = "Too short")
         @EmailValidator(message = "This is no email")
+        @StrutsParameter
         public void setText(String text) {
             this.text = text;
         }
 
         @RequiredStringValidator(message = "Password isn't correct")
+        @StrutsParameter
         public void setPassword(String password) {
             this.password = password;
         }
@@ -203,6 +252,7 @@ public class JSONValidationInterceptorTest extends StrutsTestCase {
         }
 
         @IntRangeFieldValidator(min = "-1", message = "Min value is -1")
+        @StrutsParameter
         public void setValue(int value) {
             this.value = value;
         }

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
 import java.io.StringWriter;
@@ -27,9 +24,9 @@ import java.util.Map;
 import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.util.StrutsTypeConverter;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.conversion.impl.XWorkConverter;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.conversion.impl.XWorkConverter;
+import org.apache.struts2.util.ValueStack;
 
 /**
  *

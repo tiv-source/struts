@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +18,7 @@
  * under the License.
  */
 -->
-<script type="text/javascript">
-<!--
+<@s.script>
     function toggleDebug(debugId) {
         var debugDiv = document.getElementById(debugId);
         if (debugDiv) {
@@ -33,10 +30,9 @@
             }
         }
     }
--->
-</script>
+</@s.script>
 
-<style type="text/css">
+<style>
 <!--
     table.debugTable {border-collapse:collapse; border-spacing:0; background-color:#DDDDDD;}
     table.debugTable th, table.debugTable td {padding:2px;}
@@ -44,8 +40,8 @@
 </style>
 <br>
 
-<a href="#" onclick="toggleDebug('<#if parameters.id??>${parameters.id?html}<#else>debug</#if>');return false;">[Debug]</a>
-<div style="display:none" id="<#if parameters.id??>${parameters.id?html}<#else>debug</#if>">
+<a href="#" id="toggle-button">[Debug]</a>
+<div style="display:none" id="<#if attributes.id??>${attributes.id}<#else>debug</#if>">
 <h2>Struts ValueStack Debug</h2>
 <br>
 
@@ -54,7 +50,7 @@
     <tr><th>Object</th><th>Property Name</th><th>Property Value</th><th>Property Class</th></tr>
 
     <#assign index=1>
-    <#list parameters.stackValues as stackObject>
+    <#list attributes.stackValues as stackObject>
     <tr>
         <td rowspan="${stackObject.value.size()}">${stackObject.key}</td>
 
@@ -62,8 +58,8 @@
         <#list stackObject.value.keySet() as propertyName>
             <#if renderRow==true></tr><tr><#else> <#assign renderRow=false> </#if>
             <td style="background-color:<#if (index % 2) == 0>#BBBBBB<#else>#CCCCCC</#if>;">${propertyName}</td>
-            <td style="background-color:<#if (index % 2) == 0>#BBBBBB<#else>#CCCCCC</#if>;"><#if stackObject.value.get(propertyName)??>${stackObject.value.get(propertyName).toString()?html}<#else>null</#if></td>
-            <td style="background-color:<#if (index % 2) == 0>#BBBBBB<#else>#CCCCCC</#if>;"><#if stackObject.value.get(propertyName)??>${stackObject.value.get(propertyName).class?html}<#else>null</#if></td>
+            <td style="background-color:<#if (index % 2) == 0>#BBBBBB<#else>#CCCCCC</#if>;"><#if stackObject.value.get(propertyName)??>${stackObject.value.get(propertyName).toString()}<#else>null</#if></td>
+            <td style="background-color:<#if (index % 2) == 0>#BBBBBB<#else>#CCCCCC</#if>;"><#if stackObject.value.get(propertyName)??>${stackObject.value.get(propertyName).class}<#else>null</#if></td>
     </tr>
             <#assign index= index + 1>
         </#list>
@@ -82,9 +78,15 @@
     <#list stack.context.keySet() as contextKey>
     <tr style="background-color:<#if (index % 2) == 0>#BBBBBB<#else>#CCCCCC</#if>;">
         <td>${contextKey}</td>
-        <td><#if stack.context.get(contextKey)??>${struts.toStringSafe(stack.context.get(contextKey))?html} (${struts.toStringSafe(stack.context.get(contextKey).class)?html})<#else>null</#if></td>
+        <td><#if stack.context.get(contextKey)??>${struts.toStringSafe(stack.context.get(contextKey))} (${struts.toStringSafe(stack.context.get(contextKey).class)})<#else>null</#if></td>
     </tr>
         <#assign index= index + 1>
     </#list>
 </table>
 </div>
+<@s.script>
+    document.getElementById('toggle-button').onclick = function() {
+        toggleDebug('<#if attributes.id??>${attributes.id}<#else>debug</#if>');
+        return false;
+    }
+</@s.script>

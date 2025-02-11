@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,21 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.struts2.components.ActionComponent;
 import org.apache.struts2.components.Component;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.Serial;
 
 /**
  * @see ActionComponent
  */
 public class ActionTag extends ContextBeanTag {
 
+    @Serial
     private static final long serialVersionUID = -5384167073331678855L;
 
     protected String name;
@@ -42,10 +41,12 @@ public class ActionTag extends ContextBeanTag {
     protected boolean flush = true;
     protected boolean rethrowException;
 
+    @Override
     public Component getBean(ValueStack stack, HttpServletRequest req, HttpServletResponse res) {
         return new ActionComponent(stack, req, res);
     }
 
+    @Override
     protected void populateParams() {
         super.populateParams();
 
@@ -89,6 +90,28 @@ public class ActionTag extends ContextBeanTag {
 
     public void setRethrowException(boolean rethrowException) {
         this.rethrowException = rethrowException;
+    }
+
+    /**
+     * Must declare the setter at the descendant Tag class level in order for the tag handler to locate the method.
+     */
+    @Override
+    public void setPerformClearTagStateForTagPoolingServers(boolean performClearTagStateForTagPoolingServers) {
+        super.setPerformClearTagStateForTagPoolingServers(performClearTagStateForTagPoolingServers);
+    }
+
+    @Override
+    protected void clearTagStateForTagPoolingServers() {
+       if (!getPerformClearTagStateForTagPoolingServers()) {
+            return;  // If flag is false (default setting), do not perform any state clearing.
+        }
+        super.clearTagStateForTagPoolingServers();
+        this.name = null;
+        this.namespace = null;
+        this.executeResult = false;
+        this.ignoreContextParams = false;
+        this.flush = true;
+        this.rethrowException = false;
     }
 
 }

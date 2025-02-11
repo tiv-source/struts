@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views;
 
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import com.opensymphony.xwork2.util.ValueStack;
 
 /**
  * Provides Velocity implementation classes for a tag library
@@ -36,9 +28,9 @@ public interface TagLibraryDirectiveProvider {
     /**
      * Gets a list of Velocity directive classes for the tag library.  Called once on framework
      * startup when initializing Velocity.
-     * 
+     *
      * @return A list of Velocity directive classes
      */
-    public List<Class> getDirectiveClasses();
+    List<Class<?>> getDirectiveClasses();
 
 }

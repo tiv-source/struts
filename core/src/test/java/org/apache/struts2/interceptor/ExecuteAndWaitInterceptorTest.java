@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,31 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.interceptor;
 
-import com.opensymphony.xwork2.*;
-import com.opensymphony.xwork2.config.Configuration;
-import com.opensymphony.xwork2.config.ConfigurationException;
-import com.opensymphony.xwork2.config.ConfigurationProvider;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.config.entities.InterceptorMapping;
-import com.opensymphony.xwork2.config.entities.PackageConfig;
-import com.opensymphony.xwork2.config.entities.ResultConfig;
-import com.opensymphony.xwork2.inject.ContainerBuilder;
-import com.opensymphony.xwork2.interceptor.ParametersInterceptor;
-import com.opensymphony.xwork2.mock.MockResult;
-import com.opensymphony.xwork2.ognl.OgnlUtil;
-import com.opensymphony.xwork2.util.location.LocatableProperties;
-import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionProxy;
+import org.apache.struts2.ActionProxyFactory;
+import org.apache.struts2.DefaultActionProxyFactory;
+import org.apache.struts2.ObjectFactory;
+import org.apache.struts2.config.Configuration;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.config.ConfigurationProvider;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.config.entities.InterceptorMapping;
+import org.apache.struts2.config.entities.PackageConfig;
+import org.apache.struts2.config.entities.ResultConfig;
+import org.apache.struts2.inject.ContainerBuilder;
+import org.apache.struts2.mock.MockResult;
+import org.apache.struts2.ognl.OgnlUtil;
+import org.apache.struts2.util.location.LocatableProperties;
+import jakarta.servlet.http.HttpSession;
 import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.dispatcher.HttpParameters;
+import org.apache.struts2.interceptor.exec.ExecutorProvider;
+import org.apache.struts2.interceptor.parameter.ParametersInterceptor;
 import org.apache.struts2.views.jsp.StrutsMockHttpServletRequest;
 import org.apache.struts2.views.jsp.StrutsMockHttpSession;
 
-import javax.servlet.http.HttpSession;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Test case for ExecuteAndWaitInterceptor.
@@ -51,15 +59,29 @@ public class ExecuteAndWaitInterceptorTest extends StrutsInternalTestCase {
 
     private StrutsMockHttpServletRequest request;
     private HttpSession httpSession;
-    private Map context;
-    private Map params;
-    private Map session;
+    private Map<String, Object> context;
+    private Map<String, Object> params;
+    private Map<String, Object> session;
     private ExecuteAndWaitInterceptor waitInterceptor;
     private ParametersInterceptor parametersInterceptor;
 
     public void testOneWait() throws Exception {
         waitInterceptor.setDelay(0);
         waitInterceptor.setDelaySleepInterval(0);
+
+        ActionProxy proxy = buildProxy("action1");
+        String result = proxy.execute();
+        assertEquals("wait", result);
+
+        Thread.sleep(1000);
+
+        ActionProxy proxy2 = buildProxy("action1");
+        String result2 = proxy2.execute();
+        assertEquals("success", result2);
+    }
+
+    public void testExecutorProvider() throws Exception {
+        waitInterceptor.setExecutorProvider(new TestExecutorProvider());
 
         ActionProxy proxy = buildProxy("action1");
         String result = proxy.execute();
@@ -162,36 +184,79 @@ public class ExecuteAndWaitInterceptorTest extends StrutsInternalTestCase {
         assertTrue("Job done already after 500 so there should not be such long delay", diff <= 1000);
     }
 
+    public void testFromDeserializedSession() throws Exception {
+        waitInterceptor.setDelay(0);
+        waitInterceptor.setDelaySleepInterval(0);
+
+        ActionProxy proxy = buildProxy("action1");
+        String result = proxy.execute();
+        assertEquals("wait", result);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(session);//WW-4900 action1 and invocation are not serializable but we should not fail at this line
+        oos.close();
+        byte[] b = baos.toByteArray();
+        baos.close();
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(b);
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        session = (Map<String, Object>) ois.readObject();
+        context = ActionContext.of(context).withSession(session).getContextMap();
+        ois.close();
+        bais.close();
+
+        Thread.sleep(1000);
+
+        ActionProxy proxy2 = buildProxy("action1");
+        String result2 = proxy2.execute();
+        assertEquals("wait", result2);//WW-4900 A new thread should be started when background thread missed
+
+        Thread.sleep(1000);
+
+        ActionProxy proxy3 = buildProxy("action1");
+        String result3 = proxy3.execute();
+        assertEquals("success", result3);
+    }
+
     protected ActionProxy buildProxy(String actionName) throws Exception {
         return actionProxyFactory.createActionProxy("", actionName, null, context);
     }
 
     protected void setUp() throws Exception {
+        super.setUp();
         loadConfigurationProviders(new WaitConfigurationProvider());
 
-        session = new HashMap();
-        params = new HashMap();
-        context = new HashMap();
-        context.put(ActionContext.SESSION, session);
-        context.put(ActionContext.PARAMETERS, HttpParameters.createEmpty().build());
+        session = new HashMap<>();
+        params = new HashMap<>();
+        context = new HashMap<>();
 
         request = new StrutsMockHttpServletRequest();
         httpSession = new StrutsMockHttpSession();
         request.setSession(httpSession);
         request.setParameterMap(params);
-        context.put(ServletActionContext.HTTP_REQUEST, request);
+
+        context = ActionContext.of(context)
+            .withSession(session)
+            .withParameters(HttpParameters.create().build())
+            .withServletRequest(request)
+            .getContextMap();
+
+        container.inject(waitInterceptor);
         container.inject(parametersInterceptor);
+
+        waitInterceptor.init();
+        parametersInterceptor.init();
     }
 
     protected void tearDown() throws Exception {
-        configurationManager.clearContainerProviders();
-        configurationManager.destroyConfiguration();
-        ActionContext.setContext(null);
+        super.tearDown();
     }
 
     private class WaitConfigurationProvider implements ConfigurationProvider {
 
         Configuration configuration;
+
         public void destroy() {
             waitInterceptor.destroy();
         }
@@ -205,8 +270,6 @@ public class ExecuteAndWaitInterceptorTest extends StrutsInternalTestCase {
         }
 
         public void loadPackages() throws ConfigurationException {
-
-
             // interceptors
             waitInterceptor = new ExecuteAndWaitInterceptor();
             parametersInterceptor = new ParametersInterceptor();
@@ -216,8 +279,8 @@ public class ExecuteAndWaitInterceptorTest extends StrutsInternalTestCase {
                     .addResultConfig(new ResultConfig.Builder(ExecuteAndWaitInterceptor.WAIT, MockResult.class.getName()).build())
                     .addInterceptor(new InterceptorMapping("params", parametersInterceptor))
                     .addInterceptor(new InterceptorMapping("execAndWait", waitInterceptor))
-                .build())
-            .build();
+                    .build())
+                .build();
             configuration.addPackageConfig("", wait);
         }
 
@@ -228,5 +291,27 @@ public class ExecuteAndWaitInterceptorTest extends StrutsInternalTestCase {
         }
 
     }
+
 }
+
+class TestExecutorProvider implements ExecutorProvider {
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    @Override
+    public void execute(Runnable task) {
+        executor.execute(task);
+    }
+
+    @Override
+    public boolean isShutdown() {
+        return executor.isShutdown();
+    }
+
+    @Override
+    public void shutdown() {
+        executor.shutdown();
+    }
+}
+
 

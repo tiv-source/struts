@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,23 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2;
 
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionSupport;
-import com.opensymphony.xwork2.util.ValueStack;
-import com.opensymphony.xwork2.validator.annotations.RequiredFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.RequiredStringValidator;
-import com.opensymphony.xwork2.validator.annotations.Validations;
-import com.opensymphony.xwork2.validator.annotations.ValidatorType;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.util.ValueStack;
+import org.apache.struts2.validator.annotations.RequiredFieldValidator;
+import org.apache.struts2.validator.annotations.RequiredStringValidator;
+import org.apache.struts2.validator.annotations.Validations;
+import org.apache.struts2.validator.annotations.ValidatorType;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 import org.apache.struts2.views.jsp.ui.User;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-
-/**
- */
 public class TestAction extends ActionSupport {
 
     private static final long serialVersionUID = -8891365561914451494L;
@@ -47,27 +45,30 @@ public class TestAction extends ActionSupport {
     private String result;
     private User user;
     private String[] array;
+    private Object[] objectArray;
     private String[][] list;
     private List list2;
     private List list3;
     private SomeEnum status = SomeEnum.COMPLETED;
     private Float floatNumber;
+    private Long id;
+    private List<SomeEnum> enumList;
+    private List<Integer> intList;
+    private Boolean someBool;
 
-    private final Map<String, String> texts = new HashMap<String, String>();
+    private final Map<String, String> texts = new HashMap<>();
 
     /**
      * Define a text resource within this action that will be returned by the getText methods
-     * here before delegating to the default TextProvider
-     *
-     * call
-     * @param key
-     * @param value
+     * here before delegating to the default TextProvider call
      */
     public void setText(String key, String value) {
         this.texts.put(key, value);
     }
 
-    /** Returns the test value if defined otherwise delegates to the default TextProvider */
+    /**
+     * Returns the test value if defined otherwise delegates to the default TextProvider
+     */
     public String getText(String key) {
         if (this.texts.containsKey(key)) {
             return this.texts.get(key);
@@ -75,8 +76,10 @@ public class TestAction extends ActionSupport {
         return super.getText(key);
     }
 
-    /** This is the method invoked by the {@link org.apache.struts2.util.TextProviderHelper}.
-     * Returns the test value if defined otherwise delegates to the default TextProvider */
+    /**
+     * This is the method invoked by the {@link org.apache.struts2.util.TextProviderHelper}.
+     * Returns the test value if defined otherwise delegates to the default TextProvider
+     */
     public String getText(String key, String defaultValue, List<?> args, ValueStack stack) {
         if (this.texts.containsKey(key)) {
             return this.texts.get(key);
@@ -89,6 +92,7 @@ public class TestAction extends ActionSupport {
         return collection;
     }
 
+    @StrutsParameter
     public void setCollection(Collection collection) {
         this.collection = collection;
     }
@@ -97,6 +101,7 @@ public class TestAction extends ActionSupport {
         return map;
     }
 
+    @StrutsParameter
     public void setMap(Map map) {
         this.map = map;
     }
@@ -105,6 +110,7 @@ public class TestAction extends ActionSupport {
         return foo;
     }
 
+    @StrutsParameter
     public void setFoo(String foo) {
         this.foo = foo;
     }
@@ -113,6 +119,7 @@ public class TestAction extends ActionSupport {
         return result;
     }
 
+    @StrutsParameter
     public void setResult(String result) {
         this.result = result;
     }
@@ -121,6 +128,7 @@ public class TestAction extends ActionSupport {
         return user;
     }
 
+    @StrutsParameter
     public void setUser(User user) {
         this.user = user;
     }
@@ -129,14 +137,25 @@ public class TestAction extends ActionSupport {
         return array;
     }
 
+    @StrutsParameter
     public void setArray(String[] array) {
         this.array = array;
+    }
+
+    public Object[] getObjectArray() {
+        return objectArray;
+    }
+
+    @StrutsParameter
+    public void setObjectArray(Object[] arrayObject) {
+        this.objectArray = arrayObject;
     }
 
     public String[][] getList() {
         return list;
     }
 
+    @StrutsParameter
     public void setList(String[][] list) {
         this.list = list;
     }
@@ -145,10 +164,12 @@ public class TestAction extends ActionSupport {
         return list2;
     }
 
+    @StrutsParameter
     public void setList2(List list2) {
         this.list2 = list2;
     }
 
+    @StrutsParameter
     public void setList3(List list) {
         this.list3 = list;
     }
@@ -161,6 +182,7 @@ public class TestAction extends ActionSupport {
         return this.collection2;
     }
 
+    @StrutsParameter
     public void setCollection2(Collection collection) {
         this.collection2 = collection;
     }
@@ -169,10 +191,12 @@ public class TestAction extends ActionSupport {
         return fooInt;
     }
 
+    @StrutsParameter
     public void setFooInt(Integer fooInt) {
         this.fooInt = fooInt;
     }
 
+    @Override
     public String execute() throws Exception {
         if (result == null) {
             result = Action.SUCCESS;
@@ -182,20 +206,21 @@ public class TestAction extends ActionSupport {
     }
 
     @Validations(
-            requiredFields = {
-            		@RequiredFieldValidator(type = ValidatorType.SIMPLE, fieldName = "status", message = "You must enter a value for field.")
-            },
-            requiredStrings = {
-            		@RequiredStringValidator(type = ValidatorType.SIMPLE, fieldName = "result", message = "You must enter a value for field.")
-            }
+        requiredFields = {
+            @RequiredFieldValidator(type = ValidatorType.SIMPLE, fieldName = "status", message = "You must enter a value for field.")
+        },
+        requiredStrings = {
+            @RequiredStringValidator(type = ValidatorType.SIMPLE, fieldName = "result", message = "You must enter a value for field.")
+        }
     )
     public String annotatedExecute1() throws Exception {
         return Action.SUCCESS;
     }
+
     @Validations(
-            requiredFields = {
-            		@RequiredFieldValidator(type = ValidatorType.SIMPLE, fieldName = "status", message = "You must enter a value for field.")
-            }
+        requiredFields = {
+            @RequiredFieldValidator(type = ValidatorType.SIMPLE, fieldName = "status", message = "You must enter a value for field.")
+        }
     )
     public String annotatedExecute2() throws Exception {
         return Action.SUCCESS;
@@ -209,23 +234,61 @@ public class TestAction extends ActionSupport {
         return INPUT;
     }
 
-	public SomeEnum getStatus() {
-		return status;
-	}
+    public SomeEnum getStatus() {
+        return status;
+    }
 
-	public void setStatus(SomeEnum status) {
-		this.status = status;
-	}
-    
+    @StrutsParameter
+    public void setStatus(SomeEnum status) {
+        this.status = status;
+    }
+
     public List<SomeEnum> getStatusList() {
-    	return Arrays.asList(SomeEnum.values());
+        return Arrays.asList(SomeEnum.values());
     }
 
     public Float getFloatNumber() {
         return floatNumber;
     }
 
+    @StrutsParameter
     public void setFloatNumber(Float floatNumber) {
         this.floatNumber = floatNumber;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    @StrutsParameter
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public List<SomeEnum> getEnumList() {
+        return enumList;
+    }
+
+    @StrutsParameter
+    public void setEnumList(List<SomeEnum> enumList) {
+        this.enumList = enumList;
+    }
+
+    public List<Integer> getIntList() {
+        return intList;
+    }
+
+    @StrutsParameter
+    public void setIntList(List<Integer> intList) {
+        this.intList = intList;
+    }
+
+    public Boolean getSomeBool() {
+        return someBool;
+    }
+
+    @StrutsParameter
+    public void setSomeBool(Boolean someBool) {
+        this.someBool = someBool;
     }
 }

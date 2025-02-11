@@ -24,11 +24,10 @@ import org.apache.struts2.components.Password;
 import org.apache.struts2.components.UIBean;
 
 public class PasswordTest extends AbstractCommonAttributesTest {
+
     private Password tag;
-    private boolean showPassword;
 
     public void testRenderPassword() throws Exception {
-        this.showPassword = false;
         super.setUp();
         this.tag = new Password(stack, request, response);
 
@@ -44,15 +43,14 @@ public class PasswordTest extends AbstractCommonAttributesTest {
 
 
         tag.evaluateParams();
-        map.putAll(tag.getParameters());
+        map.putAll(tag.getAttributes());
         theme.renderTag(getTagName(), context);
         String output = writer.getBuffer().toString();
-        String expected = s("<input name='name' type='password' size='10' tabindex='1' id='id1' class='class1' style='style1' title='title'></input>");
+        String expected = s("<input name='name' type='password' size='10' disabled='disabled' tabindex='1' id='id1' class='class1' style='style1' title='title'></input>");
         assertEquals(expected, output);
     }
 
     public void testRenderPasswordShowIt() throws Exception {
-        this.showPassword = true;
         super.setUp();
         this.tag = new Password(stack, request, response);
 
@@ -68,10 +66,10 @@ public class PasswordTest extends AbstractCommonAttributesTest {
         tag.setShowPassword("%{'true'}");
 
         tag.evaluateParams();
-        map.putAll(tag.getParameters());
+        map.putAll(tag.getAttributes());
         theme.renderTag(getTagName(), context);
         String output = writer.getBuffer().toString();
-        String expected = s("<input value='val1' name='name' type='password' size='10' tabindex='1' id='id1' class='class1' style='style1' title='title'></input>");
+        String expected = s("<input value='val1' name='name' type='password' size='10' disabled='disabled' tabindex='1' id='id1' class='class1' style='style1' title='title'></input>");
         assertEquals(expected, output);
     }
 

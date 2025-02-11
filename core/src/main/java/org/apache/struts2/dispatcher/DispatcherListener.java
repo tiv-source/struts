@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.dispatcher;
 
 /**
@@ -32,12 +29,12 @@ public interface DispatcherListener {
      *
      * @param du The dispatcher instance
      */
-    public void dispatcherInitialized(Dispatcher du);
+    void dispatcherInitialized(Dispatcher du);
 
     /**
      * Called when the dispatcher is destroyed
      *
      * @param du The dispatcher instance
      */
-    public void dispatcherDestroyed(Dispatcher du);
+    void dispatcherDestroyed(Dispatcher du);
 }

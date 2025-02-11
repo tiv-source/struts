@@ -20,25 +20,39 @@
  */
 package it.org.apache.struts2.showcase;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import org.htmlunit.WebClient;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.HtmlPage;
+import org.junit.Assert;
+import org.junit.Test;
 
-public class FreeMarkerManagerTest extends ITBaseTest {
-    public void testCustomManager() {
-        beginAt("/freemarker/customFreemarkerManagerDemo.action");
+public class FreeMarkerManagerTest {
+    @Test
+    public void testCustomManager() throws Exception {
+        try (final WebClient webClient = new WebClient()) {
+            final HtmlPage page = webClient
+                    .getPage(ParameterUtils.getBaseUrl() + "/freemarker/customFreemarkerManagerDemo.action");
 
-        String date = getElementTextByXPath("//*[@id='todaysDate']");
-        assertNotNull(date);
-        assertTrue(date.length() > 0);
+            final DomElement date = page.getElementById("todaysDate");
+            Assert.assertNotNull(date);
+            Assert.assertFalse(date.asNormalizedText().isEmpty());
 
-        String time = getElementTextByXPath("//*[@id='timeNow']");
-        assertNotNull(time);
-        assertTrue(time.length() > 0);
+            final DomElement time = page.getElementById("timeNow");
+            Assert.assertNotNull(time);
+            Assert.assertFalse(time.asNormalizedText().isEmpty());
+        }
     }
 
-    public void testTags() {
-        beginAt("/freemarker/standardTags.action");
-        assertElementPresent("test_name");
-        assertElementPresent("test_");
+    @Test
+    public void testTags() throws Exception {
+        try (final WebClient webClient = new WebClient()) {
+            final HtmlPage page = webClient.getPage(ParameterUtils.getBaseUrl() + "/freemarker/standardTags.action");
+
+            final DomElement date = page.getElementById("test_name");
+            Assert.assertNotNull(date);
+
+            final DomElement time = page.getElementById("test");
+            Assert.assertNotNull(time);
+        }
     }
 }

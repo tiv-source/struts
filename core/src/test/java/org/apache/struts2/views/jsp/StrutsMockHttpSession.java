@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.UUID;
 
-import com.mockobjects.servlet.MockHttpSession;
+import org.springframework.mock.web.MockHttpSession;
 
 
 /**

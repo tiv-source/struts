@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.dispatcher.mapper;
 
 import java.util.Collections;
@@ -27,13 +24,13 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.views.jsp.StrutsMockHttpServletRequest;
 
 /**
  * Unit test for {@link RestfulActionMapper}.
- *
  */
-public class RestfulActionMapperTest extends TestCase {
+public class RestfulActionMapperTest extends StrutsInternalTestCase {
 
     private RestfulActionMapper mapper;
 
@@ -41,13 +38,13 @@ public class RestfulActionMapperTest extends TestCase {
         ActionMapping am = new ActionMapping();
         am.setName("view");
         am.setNamespace("secure");
-        am.setParams(Collections.<String, Object>emptyMap());
+        am.setParams(Collections.emptyMap());
 
         assertEquals("secureview", mapper.getUriFromActionMapping(am));
     }
 
     public void testGetUriParam() {
-        Map<String, Object> param = new HashMap<String, Object>();
+        Map<String, Object> param = new HashMap<>();
         param.put("article", "123");
         ActionMapping am = new ActionMapping();
         am.setName("view");
@@ -58,7 +55,7 @@ public class RestfulActionMapperTest extends TestCase {
     }
 
     public void testGetUriParamId() {
-        Map<String, Object> param = new HashMap<String, Object>();
+        Map<String, Object> param = new HashMap<>();
         param.put("article", "123");
         param.put("viewId", "456");
         ActionMapping am = new ActionMapping();
@@ -69,16 +66,16 @@ public class RestfulActionMapperTest extends TestCase {
         assertEquals("secureview/456", mapper.getUriFromActionMapping(am));
     }
 
-    public void testGetMappingNoSlash() throws Exception {
+    public void testGetMappingNoSlash() {
         StrutsMockHttpServletRequest request = new StrutsMockHttpServletRequest();
-        request.setupGetServletPath("noslash");
+        request.setServletPath("noslash");
 
         assertNull(mapper.getMapping(request, null));
     }
 
-    public void testGetMapping() throws Exception {
+    public void testGetMapping() {
         StrutsMockHttpServletRequest request = new StrutsMockHttpServletRequest();
-        request.setupGetServletPath("/myapp/view/12");
+        request.setServletPath("/myapp/view/12");
 
         ActionMapping am = mapper.getMapping(request, null);
         assertEquals("myapp", am.getName());
@@ -86,9 +83,9 @@ public class RestfulActionMapperTest extends TestCase {
         assertEquals("12", am.getParams().get("view"));
     }
 
-    public void testGetMapping2() throws Exception {
+    public void testGetMapping2() {
         StrutsMockHttpServletRequest request = new StrutsMockHttpServletRequest();
-        request.setupGetServletPath("/myapp/12/region/europe");
+        request.setServletPath("/myapp/12/region/europe");
 
         ActionMapping am = mapper.getMapping(request, null);
         assertEquals("myapp", am.getName());
@@ -97,9 +94,9 @@ public class RestfulActionMapperTest extends TestCase {
         assertEquals("europe", am.getParams().get("region"));
     }
 
-    public void testGetMapping3() throws Exception {
+    public void testGetMapping3() {
         StrutsMockHttpServletRequest request = new StrutsMockHttpServletRequest();
-        request.setupGetServletPath("/myapp/view/12/region/europe");
+        request.setServletPath("/myapp/view/12/region/europe");
 
         ActionMapping am = mapper.getMapping(request, null);
         assertEquals("myapp", am.getName());
@@ -109,10 +106,13 @@ public class RestfulActionMapperTest extends TestCase {
     }
 
     protected void setUp() throws Exception {
+        super.setUp();
         mapper = new RestfulActionMapper();
+        container.inject(mapper);
     }
 
     protected void tearDown() throws Exception {
+        super.tearDown();
         mapper = null;
     }
 

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp.iterator;
 
+import jakarta.servlet.jsp.JspException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.util.IteratorGenerator;
@@ -29,8 +27,7 @@ import org.apache.struts2.views.annotations.StrutsTag;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
 import org.apache.struts2.views.jsp.StrutsBodyTagSupport;
 
-import javax.servlet.jsp.JspException;
-
+import java.io.Serial;
 
 /**
  * <!-- START SNIPPET: javadoc -->
@@ -129,6 +126,7 @@ import javax.servlet.jsp.JspException;
         description="Generate an iterator for a iterable source.")
 public class IteratorGeneratorTag extends StrutsBodyTagSupport {
 
+    @Serial
     private static final long serialVersionUID = 2968037295463973936L;
 
     public static final String DEFAULT_SEPARATOR = ",";
@@ -180,6 +178,13 @@ public class IteratorGeneratorTag extends StrutsBodyTagSupport {
         this.var = var;
     }
 
+    @StrutsTagAttribute(description="Whether to clear all tag state during doEndTag() processing", type="Boolean", defaultValue="false")
+    @Override
+    public void setPerformClearTagStateForTagPoolingServers(boolean performClearTagStateForTagPoolingServers) {
+        super.setPerformClearTagStateForTagPoolingServers(performClearTagStateForTagPoolingServers);
+    }
+
+    @Override
     public int doStartTag() throws JspException {
 
         // value
@@ -187,14 +192,14 @@ public class IteratorGeneratorTag extends StrutsBodyTagSupport {
 
         // separator
         String separator = DEFAULT_SEPARATOR;
-        if (separatorAttr != null && separatorAttr.length() > 0) {
+        if (separatorAttr != null && !separatorAttr.isEmpty()) {
             separator = findString(separatorAttr);
         }
 
         // TODO: maybe this could be put into an Util class, or there is already one?
         // count
         int count = 0;
-        if (countAttr != null && countAttr.length() > 0) {
+        if (countAttr != null && !countAttr.isEmpty()) {
             Object countObj = findValue(countAttr);
             if (countObj instanceof Number) {
                 count = ((Number)countObj).intValue();
@@ -211,7 +216,7 @@ public class IteratorGeneratorTag extends StrutsBodyTagSupport {
 
         // converter
         Converter converter = null;
-        if (converterAttr != null && converterAttr.length() > 0) {
+        if (converterAttr != null && !converterAttr.isEmpty()) {
             converter = (Converter) findValue(converterAttr);
         }
 
@@ -227,18 +232,34 @@ public class IteratorGeneratorTag extends StrutsBodyTagSupport {
         // Push resulting iterator on stack and put into
         // stack context if we have a "var" specified.
         getStack().push(iteratorGenerator);
-        if (var != null && var.length() > 0) {
+        if (var != null && !var.isEmpty()) {
             getStack().getContext().put(var, iteratorGenerator);
         }
 
         return EVAL_BODY_INCLUDE;
     }
 
+    @Override
     public int doEndTag() throws JspException {
         // pop resulting iterator from stack at end tag
         getStack().pop();
         iteratorGenerator = null; // clean up
+        clearTagStateForTagPoolingServers();  // Clean-up, including iteratorGenerator reference.
 
         return EVAL_PAGE;
+    }
+
+    @Override
+    protected void clearTagStateForTagPoolingServers() {
+       if (!getPerformClearTagStateForTagPoolingServers()) {
+            return;  // If flag is false (default setting), do not perform any state clearing.
+        }
+        super.clearTagStateForTagPoolingServers();
+        this.countAttr = null;
+        this.separatorAttr = null;
+        this.valueAttr = null;
+        this.converterAttr = null;
+        this.var = null;
+        this.iteratorGenerator = null;
     }
 }

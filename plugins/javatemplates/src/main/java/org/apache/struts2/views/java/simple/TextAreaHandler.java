@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +41,9 @@ public class TextAreaHandler extends AbstractTagHandler implements TagGenerator 
                 .addIfExists("id", params.get("id"))
                 .addIfExists("class", params.get("cssClass"))
                 .addIfExists("style", params.get("cssStyle"))
-                .addIfExists("title", params.get("title"));
+                .addIfExists("title", params.get("title"))
+                .addIfExists("minlength", params.get("minlength"))
+                .addIfExists("maxlength", params.get("maxlength"));
         start("textarea", attrs);
         String value = (String) params.get("nameValue");
         if (StringUtils.isNotEmpty(value))

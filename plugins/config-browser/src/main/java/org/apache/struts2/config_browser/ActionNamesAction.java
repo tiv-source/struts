@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.config_browser;
 
-import com.opensymphony.xwork2.ActionSupport;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.inject.Inject;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.struts2.ActionSupport;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.inject.Inject;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.struts2.StrutsConstants;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -57,6 +55,7 @@ public class ActionNamesAction extends ActionSupport {
         return StringEscapeUtils.escapeHtml4(namespace);
     }
 
+    @StrutsParameter
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }
@@ -84,9 +83,10 @@ public class ActionNamesAction extends ActionSupport {
         return extension;
     }
 
+    @Override
     public String execute() throws Exception {
         namespaces = configHelper.getNamespaces();
-        if (namespaces.size() == 0) {
+        if (namespaces.isEmpty()) {
             addActionError("There are no namespaces in this configuration");
             return ERROR;
         }

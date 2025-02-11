@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,27 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.dispatcher;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionProxy;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.ActionProxy;
+import org.apache.struts2.util.ValueStack;
 import org.apache.struts2.ServletActionContext;
-import org.apache.struts2.StrutsTestCase;
+import org.apache.struts2.junit.StrutsTestCase;
 import org.easymock.EasyMock;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.DefaultPieDataset;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.WriteListener;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 
 /**
+ *
  */
 public class ChartResultTest extends StrutsTestCase {
 
@@ -53,7 +51,7 @@ public class ChartResultTest extends StrutsTestCase {
     public void testChart() throws Exception {
         EasyMock.expect(responseMock.getOutputStream()).andReturn(os);
         EasyMock.replay(responseMock, mockActionProxy, actionInvocation);
-        
+
         ChartResult result = new ChartResult();
 
         result.setChart(mockChart);
@@ -65,7 +63,7 @@ public class ChartResultTest extends StrutsTestCase {
         EasyMock.verify(responseMock);
         assertTrue(os.isWritten());
     }
-    
+
     public void testContentTypePng() throws Exception {
         EasyMock.expect(responseMock.getOutputStream()).andReturn(os);
         responseMock.setContentType("image/png");
@@ -82,7 +80,7 @@ public class ChartResultTest extends StrutsTestCase {
         EasyMock.verify(responseMock);
         assertTrue(os.isWritten());
     }
-    
+
     public void testContentTypeJpg() throws Exception {
         EasyMock.expect(responseMock.getOutputStream()).andReturn(os);
         responseMock.setContentType("image/jpg");
@@ -104,7 +102,7 @@ public class ChartResultTest extends StrutsTestCase {
     public void testChartNotSet() {
         ChartResult result = new ChartResult();
         EasyMock.replay(responseMock, mockActionProxy, actionInvocation);
-        
+
         // expect exception if chart not set.
         result.setChart(null);
 
@@ -144,7 +142,7 @@ public class ChartResultTest extends StrutsTestCase {
         assertEquals("150", result.getWidth().toString());
         assertTrue(os.isWritten());
     }
-    
+
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -156,8 +154,6 @@ public class ChartResultTest extends StrutsTestCase {
 
 
         stack = ActionContext.getContext().getValueStack();
-        ActionContext.getContext().setValueStack(stack);
-
 
         mockActionProxy = EasyMock.createNiceMock(ActionProxy.class);
         EasyMock.expect(mockActionProxy.getNamespace()).andReturn("/html");
@@ -165,8 +161,8 @@ public class ChartResultTest extends StrutsTestCase {
         actionInvocation = EasyMock.createMock(ActionInvocation.class);
 
         EasyMock.expect(actionInvocation.getStack()).andReturn(stack).anyTimes();
-        
-        
+
+
         os = new MockServletOutputStream();
         responseMock = EasyMock.createNiceMock(HttpServletResponse.class);
 

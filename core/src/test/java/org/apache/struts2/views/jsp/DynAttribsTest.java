@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
 
 import java.io.File;
 import java.net.URL;
 
-import javax.servlet.jsp.tagext.DynamicAttributes;
+import jakarta.servlet.jsp.tagext.DynamicAttributes;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -39,7 +36,7 @@ import org.w3c.dom.NodeList;
  * When a tag is declared in a TLD file as 
  * <dynamic-attributes>true</dynamic-attributes>
  * then the tag-class must implement the 
- * javax.servlet.jsp.tagext.DynamicAttributes interface.
+ * jakarta.servlet.jsp.tagext.DynamicAttributes interface.
  * If a tag's class does not implement this interface, 
  * the the application server will treat the tag as unsafe.
  * 

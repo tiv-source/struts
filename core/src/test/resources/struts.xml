@@ -1,7 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,11 +20,11 @@
  */
 -->
 <!DOCTYPE struts PUBLIC
-          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
-          "http://struts.apache.org/dtds/struts-2.0.dtd">
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+        "https://struts.apache.org/dtds/struts-6.0.dtd">
 <struts>
     <package name="default" extends="struts-default">
-        <action name="hello" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="hello" class="org.apache.struts2.ActionSupport">
             <result name="success">hello.jsp</result>
             <result name="tutorial" type="redirect">/tutorial/test.action</result>
         </action>
@@ -37,17 +36,17 @@
                          class="org.apache.struts2.views.freemarker.FreemarkerResult"/>
         </result-types>
 
-        <action name="test" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="test" class="org.apache.struts2.ActionSupport">
             <result name="input">sitegraph/guess-input.ftl</result>
         </action>
 
-        <action name="test2" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="test2" class="org.apache.struts2.ActionSupport">
             <result type="freemarker">
                 <param name="location">org/apache/struts2/views/freemarker/callActionFreeMarker.ftl</param>
             </result>
         </action>
 
-        <action name="test3" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="test3" class="org.apache.struts2.ActionSupport">
             <result type="freemarker">org/apache/struts2/views/freemarker/nested.ftl</result>
         </action>
 
@@ -57,30 +56,47 @@
             </result>
         </action>
 
-         <action name="test5" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="test5" class="org.apache.struts2.ActionSupport">
             <result type="freemarker">
                 <param name="location">org/apache/struts2/views/freemarker/callActionFreeMarker2.ftl</param>
             </result>
         </action>
 
-         <action name="test6" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="test6" class="org.apache.struts2.ActionSupport">
             <result type="freemarker">
                 <param name="location">org/apache/struts2/views/freemarker/dynaAttributes.ftl</param>
             </result>
         </action>
 
-         <action name="test7" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="test7" class="org.apache.struts2.ActionSupport">
             <result type="freemarker">
                 <param name="location">org/apache/struts2/views/freemarker/manual-list.ftl</param>
             </result>
         </action>
 
-         <action name="test8" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="test8" class="org.apache.struts2.ActionSupport">
             <result type="freemarker">
                 <param name="location">org/apache/struts2/views/freemarker/customTextField.ftl</param>
             </result>
         </action>
 
+        <action name="test9" class="org.apache.struts2.ActionSupport">
+            <result type="freemarker">
+                <param name="location">org/apache/struts2/views/freemarker/select.ftl</param>
+            </result>
+        </action>
+
+        <action name="test10" class="org.apache.struts2.ActionSupport">
+            <result type="freemarker">
+                <param name="location">org/apache/struts2/views/freemarker/nonceTest.ftl</param>
+            </result>
+        </action>
+
+        <action name="test11" class="org.apache.struts2.ActionSupport">
+            <result type="freemarker">
+                <param name="location">org/apache/struts2/views/freemarker/iterator.ftl</param>
+            </result>
+        </action>
     </package>
 
     <package name="sitegraph" namespace="/tutorial/sitegraph" extends="struts-default">
@@ -89,7 +105,7 @@
                          class="org.apache.struts2.views.freemarker.FreemarkerResult"/>
         </result-types>
 
-        <action name="guess" class="com.opensymphony.xwork2.ActionSupport">
+        <action name="guess" class="org.apache.struts2.ActionSupport">
             <result name="success" type="redirect">guess-success.jsp</result>
             <result name="input">guess-input.ftl</result>
             <result name="error">guess-error.ftl</result>

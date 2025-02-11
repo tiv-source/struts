@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,9 +18,11 @@
  */
 package org.apache.struts2.rest.handler;
 
-import java.io.Writer;
+import org.apache.struts2.ActionInvocation;
+
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 
 /**
  * Handles the default content type for requests that originate from a browser's HTML form
@@ -38,7 +38,8 @@ public class FormUrlEncodedHandler implements ContentTypeHandler {
 
     public static final String CONTENT_TYPE = "application/x-www-form-urlencoded";
 
-    public String fromObject(Object obj, String resultCode, Writer out) throws IOException {
+    @Override
+    public String fromObject(ActionInvocation invocation, Object obj, String resultCode, Writer out) throws IOException {
         throw new IOException("Conversion from Object to '"+getContentType()+"' is not supported");
     }
 
@@ -48,16 +49,19 @@ public class FormUrlEncodedHandler implements ContentTypeHandler {
      * @param in The input stream, usually the body of the request
      * @param target The target, usually the action class
      */
-    public void toObject(Reader in, Object target) {
+    @Override
+    public void toObject(ActionInvocation invocation, Reader in, Object target) {
     }
 
     /**
      * @return The extension is not used by this handler
      */
+    @Override
     public String getExtension() {
         return null;
     }
 
+    @Override
     public String getContentType() {
         return CONTENT_TYPE;
     }

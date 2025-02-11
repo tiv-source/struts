@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,17 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
 
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import org.springframework.mock.web.MockPageContext;
 
-import com.mockobjects.servlet.MockPageContext;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.jsp.JspWriter;
 
 
 /**
@@ -36,7 +36,14 @@ import com.mockobjects.servlet.MockPageContext;
 public class StrutsMockPageContext extends MockPageContext {
 
     private Map attributes = new HashMap();
-    private ServletResponse response;
+    
+    private JspWriter smpcOut = null;
+    
+    public StrutsMockPageContext() { }
+    
+    public StrutsMockPageContext(ServletContext context, HttpServletRequest request, HttpServletResponse response) {
+        super(context, request, response);
+    }
 
 
     public void setAttribute(String s, Object o) {
@@ -55,14 +62,6 @@ public class StrutsMockPageContext extends MockPageContext {
         return this.attributes.get(key);
     }
 
-    public void setResponse(ServletResponse response) {
-        this.response = response;
-    }
-
-    public ServletResponse getResponse() {
-        return response;
-    }
-
     public HttpSession getSession() {
         HttpSession session = super.getSession();
 
@@ -71,6 +70,18 @@ public class StrutsMockPageContext extends MockPageContext {
         }
 
         return session;
+    }
+    
+    @Override
+    public JspWriter getOut() {
+        if (this.smpcOut == null) {
+            this.smpcOut = new StrutsMockJspWriter(new StringWriter());
+        }
+        return this.smpcOut;
+    }
+    
+    public void setJspWriter(JspWriter w) {
+        this.smpcOut = w;
     }
 
     public Object findAttribute(String s) {

@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +20,6 @@
 -->
 <tr style="display:none;">
   <td colspan="2">
-    <#include "/${parameters.templateDir}/simple/hidden.ftl" />
+    <#include "/${attributes.templateDir}/simple/hidden.ftl" />
   </td>
 </tr>

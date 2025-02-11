@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,17 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+
+import java.io.Serial;
 
 /**
  */
 public class JspSupportServlet extends HttpServlet {
 
+    @Serial
     private static final long serialVersionUID = 8302309812391541933L;
 
     public static JspSupportServlet jspSupportServlet;

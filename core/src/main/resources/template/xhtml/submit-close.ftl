@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +18,6 @@
  * under the License.
  */
 -->
-<#include "/${parameters.templateDir}/simple/submit-close.ftl" />
+<#include "/${attributes.templateDir}/simple/submit-close.ftl" />
 </div><#t/>
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/controlfooter.ftl" />
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/controlfooter.ftl" />

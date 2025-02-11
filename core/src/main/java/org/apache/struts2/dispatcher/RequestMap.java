@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,26 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.dispatcher;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-
 /**
  * A simple implementation of the {@link java.util.Map} interface to handle a collection of request attributes.
  */
-public class RequestMap extends AbstractMap implements Serializable {
+public class RequestMap extends AbstractMap<String, Object> implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -7675640869293787926L;
 
-    private Set<Object> entries;
-    private HttpServletRequest request;
+    private final HttpServletRequest request;
+
+    private Set<Entry<String, Object>> entries;
 
     /**
      * Saves the request to use as the backing for getting and setting values
@@ -48,16 +48,16 @@ public class RequestMap extends AbstractMap implements Serializable {
         this.request = request;
     }
 
-
     /**
      * Removes all attributes from the request as well as clears entries in this map.
      */
+    @Override
     public void clear() {
         entries = null;
-        Enumeration keys = request.getAttributeNames();
+        Enumeration<String> keys = request.getAttributeNames();
 
         while (keys.hasMoreElements()) {
-            String key = (String) keys.nextElement();
+            String key = keys.nextElement();
             request.removeAttribute(key);
         }
     }
@@ -67,38 +67,19 @@ public class RequestMap extends AbstractMap implements Serializable {
      *
      * @return a Set of attributes from the http request.
      */
-    public Set entrySet() {
+    @Override
+    public Set<Entry<String, Object>> entrySet() {
         if (entries == null) {
             entries = new HashSet<>();
 
-            Enumeration enumeration = request.getAttributeNames();
+            Enumeration<String> enumeration = request.getAttributeNames();
 
             while (enumeration.hasMoreElements()) {
-                final String key = enumeration.nextElement().toString();
+                final String key = enumeration.nextElement();
                 final Object value = request.getAttribute(key);
-                entries.add(new Entry() {
-                    public boolean equals(Object obj) {
-                        if (!(obj instanceof Entry)) {
-                            return false;
-                        }
-                        Entry entry = (Entry) obj;
-
-                        return ((key == null) ? (entry.getKey() == null) : key.equals(entry.getKey())) && ((value == null) ? (entry.getValue() == null) : value.equals(entry.getValue()));
-                    }
-
-                    public int hashCode() {
-                        return ((key == null) ? 0 : key.hashCode()) ^ ((value == null) ? 0 : value.hashCode());
-                    }
-
-                    public Object getKey() {
-                        return key;
-                    }
-
-                    public Object getValue() {
-                        return value;
-                    }
-
-                    public Object setValue(Object obj) {
+                entries.add(new StringObjectEntry(key, value) {
+                    @Override
+                    public Object setValue(final Object obj) {
                         request.setAttribute(key, obj);
 
                         return value;
@@ -116,7 +97,11 @@ public class RequestMap extends AbstractMap implements Serializable {
      * @param key the name of the request attribute.
      * @return the request attribute or <tt>null</tt> if it doesn't exist.
      */
-    public Object get(Object key) {
+    @Override
+    public Object get(final Object key) {
+        if (key == null) {
+            return null;
+        }
         return request.getAttribute(key.toString());
     }
 
@@ -127,10 +112,13 @@ public class RequestMap extends AbstractMap implements Serializable {
      * @param value the value to set.
      * @return the object that was just set.
      */
-    public Object put(Object key, Object value) {
+    @Override
+    public Object put(final String key, final Object value) {
         Object oldValue = get(key);
         entries = null;
-        request.setAttribute(key.toString(), value);
+
+        request.setAttribute(key, value);
+
         return oldValue;
     }
 
@@ -140,7 +128,12 @@ public class RequestMap extends AbstractMap implements Serializable {
      * @param key the name of the attribute to remove.
      * @return the value that was removed or <tt>null</tt> if the value was not found (and hence, not removed).
      */
-    public Object remove(Object key) {
+    @Override
+    public Object remove(final Object key) {
+        if (key == null) {
+            return null;
+        }
+
         entries = null;
 
         Object value = get(key);

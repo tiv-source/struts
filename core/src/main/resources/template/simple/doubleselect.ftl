@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,127 +18,171 @@
  * under the License.
  */
 -->
-<#include "/${parameters.templateDir}/simple/select.ftl" />
-<#assign startCount = 0/>
-<#if parameters.headerKey?? && parameters.headerValue??>
-    <#assign startCount = startCount + 1/>
+<#global dynamic_attributes_ignore = "second-"/>
+<#include "/${attributes.templateDir}/simple/select.ftl" />
+<#assign startCount = 0/><#rt/>
+<#if attributes.headerKey?? && attributes.headerValue??>
+    <#assign startCount = startCount + 1/><#rt/>
 </#if>
-<#if parameters.emptyOption??>
-    <#assign startCount = startCount + 1/>
+<#if attributes.emptyOption??>
+    <#assign startCount = startCount + 1/><#rt/>
 </#if>
-
 <br/>
 <select<#rt/>
-        name="${(parameters.doubleName!"")?html}"<#rt/>
-<#if parameters.disabled!false>
-        disabled="disabled"<#rt/>
+ name="${(attributes.doubleName!"")}"<#rt/>
+<#if attributes.disabled!false>
+ disabled="disabled"<#rt/>
 </#if>
-<#if parameters.doubleTabindex?has_content>
-        tabindex="${parameters.doubleTabindex?html}"<#rt/>
+<#if attributes.doubleTabindex?has_content>
+ tabindex="${attributes.doubleTabindex}"<#rt/>
 </#if>
-<#if parameters.doubleId?has_content>
-        id="${parameters.doubleId?html}"<#rt/>
+<#if attributes.doubleId?has_content>
+ id="${attributes.doubleId}"<#rt/>
 </#if>
-<#if parameters.doubleCss?has_content>
-        class="${parameters.doubleCss?html}"<#rt/>
+<#if attributes.doubleCss?has_content>
+ class="${attributes.doubleCss}"<#rt/>
 </#if>
-<#if parameters.doubleStyle?has_content>
-        style="${parameters.doubleStyle?html}"<#rt/>
+<#if attributes.doubleStyle?has_content>
+ style="${attributes.doubleStyle}"<#rt/>
 </#if>
-<#if parameters.title?has_content>
-        title="${parameters.title?html}"<#rt/>
+<#if attributes.title?has_content>
+ title="${attributes.title}"<#rt/>
 </#if>
-<#if parameters.multiple!false>
-        multiple="multiple"<#rt/>
+<#if attributes.multiple!false>
+ multiple="multiple"<#rt/>
 </#if>
-<#if parameters.get("doubleSize")?has_content>
-        size="${parameters.get("doubleSize")?html}"<#rt/>
+<#if attributes.get("doubleSize")?has_content>
+ size="${attributes.get("doubleSize")}"<#rt/>
 </#if>
-<#if parameters.doubleMultiple!false>
-        multiple="multiple"<#rt/>
+<#if attributes.doubleMultiple!false>
+ multiple="multiple"<#rt/>
 </#if>
-<#if parameters.doubleDisabled!false>
-        disabled="disabled"<#rt/>
+<#if attributes.doubleDisabled!false>
+ disabled="disabled"<#rt/>
 </#if>
-        >
+<#if attributes.doubleOnclick??>
+ onclick="<#outputformat 'JavaScript'>${attributes.doubleOnclick}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOndblclick??>
+ ondblclick="<#outputformat 'JavaScript'>${attributes.doubleOndblclick}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnmousedown??>
+ onmousedown="<#outputformat 'JavaScript'>${attributes.doubleOnmousedown}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnmouseup??>
+ onmouseup="<#outputformat 'JavaScript'>${attributes.doubleOnmouseup}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnmouseover??>
+ onmouseover="<#outputformat 'JavaScript'>${attributes.doubleOnmouseover}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnmousemove??>
+ onmousemove="<#outputformat 'JavaScript'>${attributes.doubleOnmousemove}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnmouseout??>
+ onmouseout="<#outputformat 'JavaScript'>${attributes.doubleOnmouseout}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnfocus??>
+ onfocus="<#outputformat 'JavaScript'>${attributes.doubleOnfocus}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnblur??>
+ onblur="<#outputformat 'JavaScript'>${attributes.doubleOnblur}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnkeypress??>
+ onkeypress="<#outputformat 'JavaScript'>${attributes.doubleOnkeypress}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnkeydown??>
+ onkeydown="<#outputformat 'JavaScript'>${attributes.doubleOnkeydown}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnkeyup??>
+ onkeyup="<#outputformat 'JavaScript'>${attributes.doubleOnkeyup}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnselect??>
+ onselect="<#outputformat 'JavaScript'>${attributes.doubleOnselect}</#outputformat>"<#rt/>
+</#if>
+<#if attributes.doubleOnchange??>
+ onchange="<#outputformat 'JavaScript'>${attributes.doubleOnchange}</#outputformat>"<#rt/>
+</#if>
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/prefixed-dynamic-attributes.ftl" />
+<@prefixedDynamicAttributes prefix="second-"/>
+>
 </select>
-<#if parameters.doubleMultiple!false>
-<input type="hidden" id="__multiselect_${parameters.doubleId?html}"
-       name="__multiselect_${(parameters.doubleName!"")?html}" value=""<#rt/>
-    <#if parameters.doubleDisabled!false>
-       disabled="disabled"<#rt/>
-    </#if>
-        />
+<#if attributes.doubleMultiple!false>
+<input type="hidden" id="__multiselect_${attributes.doubleId}"<#rt/>
+ name="__multiselect_${(attributes.doubleName!"")}" value=""<#rt/>
+<#if attributes.doubleDisabled!false>
+ disabled="disabled"<#rt/>
 </#if>
-<script type="text/javascript">
+/><#rt/>
+</#if>
+<@s.script>
     <#assign itemCount = startCount/>
-    var ${parameters.id}Group = new Array(${parameters.listSize} + ${startCount});
-    for (var i = 0; i < (${parameters.listSize} + ${startCount}); i++) {
-        ${parameters.id}Group[i] = [];
+    var ${attributes.escapedId}Group = new Array(${attributes.listSize?number?c} + ${startCount});
+    for (var i = 0; i < (${attributes.listSize?number?c} + ${startCount}); i++) {
+        ${attributes.escapedId}Group[i] = [];
     }
 
-    <@s.iterator value="parameters.list">
-        <#if parameters.listKey??>
-            <#assign itemKey = stack.findValue(parameters.listKey)/>
+    <@s.iterator value="attributes.list">
+        <#if attributes.listKey??>
+            <#assign itemKey = stack.findValue(attributes.listKey)/>
             <#else>
                 <#assign itemKey = stack.findValue('top')/>
         </#if>
-        <#if parameters.listValue??>
-            <#assign itemValue = stack.findString(parameters.listValue)/>
+        <#if attributes.listValue??>
+            <#assign itemValue = stack.findString(attributes.listValue)/>
             <#else>
                 <#assign itemValue = stack.findString('top')/>
         </#if>
         <#assign doubleItemCount = 0/>
-        <#if parameters.doubleHeaderKey?? && parameters.doubleHeaderValue??>
-        ${parameters.id}Group[${itemCount}][${doubleItemCount}] = new Option("${parameters.doubleHeaderValue?js_string}", "${parameters.doubleHeaderKey?js_string}");
+        <#if attributes.doubleHeaderKey?? && attributes.doubleHeaderValue??>
+        ${attributes.escapedId}Group[${itemCount}][${doubleItemCount}] = new Option("${attributes.doubleHeaderValue?js_string}", "${attributes.doubleHeaderKey?js_string}");
             <#assign doubleItemCount = doubleItemCount + 1/>
         </#if>
-        <#if parameters.doubleEmptyOption??>
-        ${parameters.id}Group[${itemCount}][${doubleItemCount}] = new Option("", "");
+        <#if attributes.doubleEmptyOption??>
+        ${attributes.escapedId}Group[${itemCount}][${doubleItemCount}] = new Option("", "");
             <#assign doubleItemCount = doubleItemCount + 1/>
         </#if>
-    <@s.iterator value="${parameters.doubleList}">
-        <#if parameters.doubleListKey??>
-            <#assign doubleItemKey = stack.findValue(parameters.doubleListKey)/>
+    <@s.iterator value="${attributes.doubleList}">
+        <#if attributes.doubleListKey??>
+            <#assign doubleItemKey = stack.findValue(attributes.doubleListKey)/>
             <#else>
                 <#assign doubleItemKey = stack.findValue('top')/>
         </#if>
         <#assign doubleItemKeyStr = doubleItemKey.toString() />
-        <#if parameters.doubleListValue??>
-            <#assign doubleItemValue = stack.findString(parameters.doubleListValue)/>
+        <#if attributes.doubleListValue??>
+            <#assign doubleItemValue = stack.findString(attributes.doubleListValue)/>
             <#else>
                 <#assign doubleItemValue = stack.findString('top')/>
         </#if>
-        <#if parameters.doubleListCssClass??>
-            <#if stack.findString(parameters.doubleListCssClass)??>
-              <#assign itemDoubleCssClass= stack.findString(parameters.doubleListCssClass)/>
+        <#if attributes.doubleListCssClass??>
+            <#if stack.findString(attributes.doubleListCssClass)??>
+              <#assign itemDoubleCssClass= stack.findString(attributes.doubleListCssClass)/>
             <#else>
               <#assign itemDoubleCssClass = ''/>
             </#if>
         </#if>
-        <#if parameters.doubleListCssStyle??>
-            <#if stack.findString(parameters.doubleListCssStyle)??>
-              <#assign itemDoubleCssStyle= stack.findString(parameters.doubleListCssStyle)/>
+        <#if attributes.doubleListCssStyle??>
+            <#if stack.findString(attributes.doubleListCssStyle)??>
+              <#assign itemDoubleCssStyle= stack.findString(attributes.doubleListCssStyle)/>
             <#else>
               <#assign itemDoubleCssStyle = ''/>
             </#if>
         </#if>
-        <#if parameters.doubleListTitle??>
-            <#if stack.findString(parameters.doubleListTitle)??>
-              <#assign itemDoubleTitle= stack.findString(parameters.doubleListTitle)/>
+        <#if attributes.doubleListTitle??>
+            <#if stack.findString(attributes.doubleListTitle)??>
+              <#assign itemDoubleTitle= stack.findString(attributes.doubleListTitle)/>
             <#else>
               <#assign itemDoubleTitle = ''/>
             </#if>
         </#if>
-    ${parameters.id}Group[${itemCount}][${doubleItemCount}] = new Option("${doubleItemValue?js_string}", "${doubleItemKeyStr?js_string}");
+    ${attributes.escapedId}Group[${itemCount}][${doubleItemCount}] = new Option("${doubleItemValue?js_string}", "${doubleItemKeyStr?js_string}");
         <#if itemDoubleCssClass??>
-    ${parameters.id}Group[${itemCount}][${doubleItemCount}].setAttribute("class","${itemDoubleCssClass?html}");
+    ${attributes.escapedId}Group[${itemCount}][${doubleItemCount}].setAttribute("class","${itemDoubleCssClass}");
         </#if>
         <#if itemDoubleCssStyle??>
-        ${parameters.id}Group[${itemCount}][${doubleItemCount}].setAttribute("style","${itemDoubleCssStyle?html}");
+        ${attributes.escapedId}Group[${itemCount}][${doubleItemCount}].setAttribute("style","${itemDoubleCssStyle}");
         </#if>
         <#if itemDoubleTitle??>
-        ${parameters.id}Group[${itemCount}][${doubleItemCount}].setAttribute("title","${itemDoubleTitle?html}");
+        ${attributes.escapedId}Group[${itemCount}][${doubleItemCount}].setAttribute("title","${itemDoubleTitle}");
         </#if>
 
         <#assign doubleItemCount = doubleItemCount + 1/>
@@ -148,48 +190,48 @@
         <#assign itemCount = itemCount + 1/>
     </@s.iterator>
 
-    var ${parameters.id}Temp = document.${parameters.formName}.${parameters.doubleId};
+    var ${attributes.escapedId}Temp = document.${attributes.formName}.${attributes.doubleId};
     <#assign itemCount = startCount/>
     <#assign redirectTo = 0/>
-    <@s.iterator value="parameters.list">
-        <#if parameters.listKey??>
-            <#assign itemKey = stack.findValue(parameters.listKey)/>
+    <@s.iterator value="attributes.list">
+        <#if attributes.listKey??>
+            <#assign itemKey = stack.findValue(attributes.listKey)/>
             <#else>
                 <#assign itemKey = stack.findValue('top')/>
         </#if>
-        <#if tag.contains(parameters.nameValue, itemKey)>
+        <#if tag.contains(attributes.nameValue, itemKey)>
             <#assign redirectTo = itemCount/>
         </#if>
         <#assign itemCount = itemCount + 1/>
     </@s.iterator>
-    ${parameters.id}Redirect(${redirectTo});
-    function ${parameters.id}Redirect(x) {
+    ${attributes.escapedId}Redirect(${redirectTo});
+    function ${attributes.escapedId}Redirect(x) {
         var selected = false;
-        for (var m = ${parameters.id}Temp.options.length - 1; m >= 0; m--) {
-            ${parameters.id}Temp.remove(m);
+        for (var m = ${attributes.escapedId}Temp.options.length - 1; m >= 0; m--) {
+            ${attributes.escapedId}Temp.remove(m);
         }
 
-        for (var i = 0; i < ${parameters.id}Group[x].length; i++) {
-            ${parameters.id}Temp.options[i] = new Option(${parameters.id}Group[x][i].text, ${parameters.id}Group[x][i].value);
-        <#if parameters.doubleNameValue??>
-            <#if parameters.doubleMultiple??>
-                for (var j = 0; j < ${parameters.doubleNameValue}.length; j++) {
-                    if (${parameters.id}Temp.options[i].value == ${parameters.doubleNameValue?js_string}[j]) {
-                        ${parameters.id}Temp.options[i].selected = true;
+        for (var i = 0; i < ${attributes.escapedId}Group[x].length; i++) {
+            ${attributes.escapedId}Temp.options[i] = new Option(${attributes.escapedId}Group[x][i].text, ${attributes.escapedId}Group[x][i].value);
+        <#if attributes.doubleNameValue??>
+            <#if attributes.doubleMultiple??>
+                for (var j = 0; j < ${attributes.doubleNameValue}.length; j++) {
+                    if (${attributes.escapedId}Temp.options[i].value == ${attributes.doubleNameValue?js_string}[j]) {
+                        ${attributes.escapedId}Temp.options[i].selected = true;
                         selected = true;
                     }
                 }
                 <#else>
-                    if (${parameters.id}Temp.options[i].value == '${parameters.doubleNameValue?js_string}') {
-                        ${parameters.id}Temp.options[i].selected = true;
+                    if (${attributes.escapedId}Temp.options[i].value == '${attributes.doubleNameValue?js_string}') {
+                        ${attributes.escapedId}Temp.options[i].selected = true;
                         selected = true;
                     }
             </#if>
         </#if>
         }
 
-        if ((${parameters.id}Temp.options.length > 0) && (! selected)) {
-            ${parameters.id}Temp.options[0].selected = true;
+        if ((${attributes.escapedId}Temp.options.length > 0) && (! selected)) {
+            ${attributes.escapedId}Temp.options[0].selected = true;
         }
     }
-</script>
+</@s.script>

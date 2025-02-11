@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,45 +20,45 @@
 -->
 <#setting number_format="#.#####">
 <select<#rt/>
- name="${(parameters.name!"")?html}"<#rt/>
-<#if parameters.get("size")?has_content>
- size="${parameters.get("size")?html}"<#rt/>
+ name="${(attributes.name!"")}"<#rt/>
+<#if attributes.get("size")?has_content>
+ size="${attributes.get("size")}"<#rt/>
 </#if>
-<#if parameters.disabled!false>
+<#if attributes.disabled!false>
  disabled="disabled"<#rt/>
 </#if>
-<#if parameters.tabindex?has_content>
- tabindex="${parameters.tabindex?html}"<#rt/>
+<#if attributes.tabindex?has_content>
+ tabindex="${attributes.tabindex}"<#rt/>
 </#if>
-<#if parameters.id?has_content>
- id="${parameters.id?html}"<#rt/>
+<#if attributes.id?has_content>
+ id="${attributes.id}"<#rt/>
 </#if>
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/css.ftl" />
-<#if parameters.title?has_content>
- title="${parameters.title?html}"<#rt/>
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/css.ftl" />
+<#if attributes.title?has_content>
+ title="${attributes.title}"<#rt/>
 </#if>
-<#if parameters.multiple!false>
+<#if attributes.multiple!false>
  multiple="multiple"<#rt/>
 </#if>
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/scripting-events.ftl" />
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/common-attributes.ftl" />
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/dynamic-attributes.ftl" />
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/scripting-events.ftl" />
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/common-attributes.ftl" />
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/dynamic-attributes.ftl" />
 >
-<#if parameters.headerKey?? && parameters.headerValue??>
-    <option value="${parameters.headerKey?html}"
-    <#if tag.contains(parameters.nameValue, parameters.headerKey) == true>
-    selected="selected"
+<#if attributes.headerKey?? && attributes.headerValue??>
+    <option value="${attributes.headerKey}"<#rt/>
+    <#if tag.contains(attributes.nameValue, attributes.headerKey) == true>
+    selected="selected"<#rt/>
     </#if>
-    >${parameters.headerValue?html}</option>
+    >${attributes.headerValue}</option>
 </#if>
-<#if parameters.emptyOption!false>
+<#if attributes.emptyOption!false>
     <option value=""></option>
 </#if>
-<@s.iterator value="parameters.list">
-        <#if parameters.listKey??>
-            <#if stack.findValue(parameters.listKey)??>
-              <#assign itemKey = stack.findValue(parameters.listKey)/>
-              <#assign itemKeyStr = stack.findString(parameters.listKey)/>
+<@s.iterator value="attributes.list">
+        <#if attributes.listKey??>
+            <#if stack.findValue(attributes.listKey)??>
+              <#assign itemKey = stack.findValue(attributes.listKey)/>
+              <#assign itemKeyStr = stack.findString(attributes.listKey)/>
             <#else>
               <#assign itemKey = ''/>
               <#assign itemKeyStr = ''/>
@@ -69,80 +67,78 @@
             <#assign itemKey = stack.findValue('top')/>
             <#assign itemKeyStr = stack.findString('top')>
         </#if>
-        <#if parameters.listValueKey??>
-          <#-- checks the valueStack for the 'valueKey.' The valueKey is then looked-up in the locale file for it's 
+        <#if attributes.listValueKey??>
+          <#-- checks the valueStack for the 'valueKey.' The valueKey is then looked-up in the locale file for it's
              localized value.  This is then used as a label -->
-          <#assign valueKey = stack.findString(parameters.listValueKey) />
-          <#if valueKey??>
+          <#assign valueKey = stack.findString(attributes.listValueKey)!'' />
+          <#if valueKey?has_content>
               <#assign itemValue = struts.getText(valueKey) />
           <#else>
-              <#assign itemValue = parameters.listValueKey />
+              <#assign itemValue = attributes.listValueKey />
           </#if>
-        <#elseif parameters.listValue??>
-            <#if stack.findString(parameters.listValue)??>
-              <#assign itemValue = stack.findString(parameters.listValue)/>
+        <#elseif attributes.listValue??>
+            <#if stack.findString(attributes.listValue)??>
+              <#assign itemValue = stack.findString(attributes.listValue)/>
             <#else>
               <#assign itemValue = ''/>
             </#if>
         <#else>
             <#assign itemValue = stack.findString('top')/>
         </#if>
-        <#if parameters.listCssClass??>
-            <#if stack.findString(parameters.listCssClass)??>
-              <#assign itemCssClass= stack.findString(parameters.listCssClass)/>
+        <#if attributes.listCssClass??>
+            <#if stack.findString(attributes.listCssClass)??>
+              <#assign itemCssClass= stack.findString(attributes.listCssClass)/>
             <#else>
               <#assign itemCssClass = ''/>
             </#if>
         </#if>
-        <#if parameters.listCssStyle??>
-            <#if stack.findString(parameters.listCssStyle)??>
-              <#assign itemCssStyle= stack.findString(parameters.listCssStyle)/>
+        <#if attributes.listCssStyle??>
+            <#if stack.findString(attributes.listCssStyle)??>
+              <#assign itemCssStyle= stack.findString(attributes.listCssStyle)/>
             <#else>
               <#assign itemCssStyle = ''/>
             </#if>
         </#if>
-        <#if parameters.listTitle??>
-            <#if stack.findString(parameters.listTitle)??>
-              <#assign itemTitle= stack.findString(parameters.listTitle)/>
+        <#if attributes.listTitle??>
+            <#if stack.findString(attributes.listTitle)??>
+              <#assign itemTitle= stack.findString(attributes.listTitle)/>
             <#else>
               <#assign itemTitle = ''/>
             </#if>
         </#if>
-    <option value="${itemKeyStr?html}"<#rt/>
-        <#if tag.contains(parameters.nameValue, itemKey) == true>
+    <option value="${itemKeyStr}"<#rt/>
+        <#if tag.contains(attributes.nameValue, itemKey) == true>
  selected="selected"<#rt/>
         </#if>
         <#if itemCssClass?has_content>
- class="${itemCssClass?html}"<#rt/>
+ class="${itemCssClass}"<#rt/>
         </#if>
         <#if itemCssStyle?has_content>
- style="${itemCssStyle?html}"<#rt/>
+ style="${itemCssStyle}"<#rt/>
         </#if>
         <#if itemTitle?has_content>
- title="${itemTitle?html}"<#rt/>
+ title="${itemTitle}"<#rt/>
         </#if>
-    >${itemValue?html}</option><#lt/>
+    >${itemValue}</option><#lt/>
 </@s.iterator>
-
-<#include "/${parameters.templateDir}/${parameters.expandTheme}/optgroup.ftl" />
-
+<#include "/${attributes.templateDir}/${attributes.expandTheme}/optgroup.ftl" />
 </select>
 
-<#if parameters.multiple!false>
-  <#if (parameters.id?? && parameters.name??)>
-    <input type="hidden" id="__multiselect_${parameters.id?html}" name="__multiselect_${parameters.name?html}" value=""<#rt/>
+<#if attributes.multiple!false>
+  <#if (attributes.id?? && attributes.name??)>
+    <input type="hidden" id="__multiselect_${attributes.id}" name="__multiselect_${attributes.name}" value=""<#rt/>
   </#if>
-  <#if (parameters.id?? && !parameters.name??)>
-    <input type="hidden" id="__multiselect_${parameters.id?html}" name="__multiselect_${parameters.id?html}" value=""<#rt/>
+  <#if (attributes.id?? && !attributes.name??)>
+    <input type="hidden" id="__multiselect_${attributes.id}" name="__multiselect_${attributes.id}" value=""<#rt/>
   </#if>
-  <#if ( !parameters.id?? && parameters.name??)>
-    <input type="hidden" id="__multiselect_${parameters.id?html}" name="__multiselect_${parameters.id?html}" value=""<#rt/>
+  <#if ( !attributes.id?? && attributes.name??)>
+    <input type="hidden" id="__multiselect_${attributes.id}" name="__multiselect_${attributes.id}" value=""<#rt/>
   </#if>
-   <#if ( !parameters.id?? && !parameters.name??)>
+   <#if ( !attributes.id?? && !attributes.name??)>
      <input type="hidden" id="" name="" value="" <#rt/>
   </#if>
-  
-<#if parameters.disabled!false>
+
+<#if attributes.disabled!false>
  disabled="disabled"<#rt/>
 </#if>
  />

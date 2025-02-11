@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.interceptor;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionProxy;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
-import com.opensymphony.xwork2.interceptor.PreResultListener;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.ActionProxy;
+import org.apache.struts2.interceptor.AbstractInterceptor;
+import org.apache.struts2.interceptor.PreResultListener;
+import org.apache.struts2.util.ValueStack;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +32,7 @@ import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.StrutsException;
 import org.apache.struts2.dispatcher.SessionMap;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -146,6 +144,7 @@ import java.util.Map;
  */
 public class ScopeInterceptor extends AbstractInterceptor implements PreResultListener {
 
+    @Serial
     private static final long serialVersionUID = 9120762699600054395L;
 
     private static final Logger LOG = LogManager.getLogger(ScopeInterceptor.class);
@@ -235,7 +234,7 @@ public class ScopeInterceptor extends AbstractInterceptor implements PreResultLi
         return o;
     }
 
-    private static Map locks = new IdentityHashMap();
+    private static final Map<Object, Object> locks = new IdentityHashMap<>();
 
     static void lock(Object o, ActionInvocation invocation) throws Exception {
         synchronized (o) {
@@ -265,41 +264,41 @@ public class ScopeInterceptor extends AbstractInterceptor implements PreResultLi
     }
 
     protected void after(ActionInvocation invocation, String result) throws Exception {
-        Map ses = ActionContext.getContext().getSession();
-        if ( ses != null) {
-            unlock(ses);
+        Map<String, Object> session = ActionContext.getContext().getSession();
+        if ( session != null) {
+            unlock(session);
         }
     }
 
 
     protected void before(ActionInvocation invocation) throws Exception {
         invocation.addPreResultListener(this);
-        Map ses = ActionContext.getContext().getSession();
-        if (ses == null && autoCreateSession) {
-            ses = new SessionMap(ServletActionContext.getRequest());
-            ActionContext.getContext().setSession(ses);
+        Map<String, Object> session = ActionContext.getContext().getSession();
+        if (session == null && autoCreateSession) {
+            session = new SessionMap(ServletActionContext.getRequest());
+            ActionContext.getContext().withSession(session);
         }
 
-        if ( ses != null) {
-            lock(ses, invocation);
+        if ( session != null) {
+            lock(session, invocation);
         }
 
         String key = getKey(invocation);
-        Map app = ActionContext.getContext().getApplication();
+        Map<String, Object> application = ActionContext.getContext().getApplication();
         final ValueStack stack = ActionContext.getContext().getValueStack();
 
         LOG.debug("scope interceptor before");
 
-        if (application != null)
-            for (String string : application) {
-                Object attribute = app.get(key + string);
+        if (this.application != null)
+            for (String string : this.application) {
+                Object attribute = application.get(key + string);
                 if (attribute != null) {
                     LOG.debug("Application scoped variable set {} = {}", string, String.valueOf(attribute));
                     stack.setValue(string, nullConvert(attribute));
                 }
             }
 
-        if (ActionContext.getContext().getParameters().get(sessionReset) != null) {
+        if (ActionContext.getContext().getParameters().get(sessionReset).isDefined()) {
             return;
         }
 
@@ -307,14 +306,14 @@ public class ScopeInterceptor extends AbstractInterceptor implements PreResultLi
             return;
         }
 
-        if (ses == null) {
+        if (session == null) {
             LOG.debug("No HttpSession created... Cannot set session scoped variables");
             return;
         }
 
-        if (session != null && (!"start".equals(type))) {
-            for (String string : session) {
-                Object attribute = ses.get(key + string);
+        if (this.session != null && (!"start".equals(type))) {
+            for (String string : this.session) {
+                Object attribute = session.get(key + string);
                 if (attribute != null) {
                     LOG.debug("Session scoped variable set {} = {}", string, String.valueOf(attribute));
                     stack.setValue(string, nullConvert(attribute));
@@ -328,42 +327,42 @@ public class ScopeInterceptor extends AbstractInterceptor implements PreResultLi
     }
 
     /* (non-Javadoc)
-     * @see com.opensymphony.xwork2.interceptor.PreResultListener#beforeResult(com.opensymphony.xwork2.ActionInvocation, java.lang.String)
+     * @see org.apache.struts2.interceptor.PreResultListener#beforeResult(org.apache.struts2.ActionInvocation, java.lang.String)
      */
     public void beforeResult(ActionInvocation invocation, String resultCode) {
         String key = getKey(invocation);
-        Map app = ActionContext.getContext().getApplication();
+        Map<String, Object> application = ActionContext.getContext().getApplication();
         final ValueStack stack = ActionContext.getContext().getValueStack();
 
-        if (application != null)
-            for (String string : application) {
+        if (this.application != null)
+            for (String string : this.application) {
                 Object value = stack.findValue(string);
                 LOG.debug("Application scoped variable saved {} = {}", string, String.valueOf(value));
 
                 //if( value != null)
-                app.put(key + string, nullConvert(value));
+                application.put(key + string, nullConvert(value));
             }
 
         boolean ends = "end".equals(type);
 
-        Map ses = ActionContext.getContext().getSession();
-        if (ses != null) {
+        Map<String, Object> session = ActionContext.getContext().getSession();
+        if (session != null) {
 
-            if (session != null) {
-                for (String string : session) {
+            if (this.session != null) {
+                for (String string : this.session) {
                     if (ends) {
-                        ses.remove(key + string);
+                        session.remove(key + string);
                     } else {
                         Object value = stack.findValue(string);
                         LOG.debug("Session scoped variable saved {} = {}", string, String.valueOf(value));
 
                         // Null value should be scoped too
                         //if( value != null)
-                        ses.put(key + string, nullConvert(value));
+                        session.put(key + string, nullConvert(value));
                     }
                 }
             }
-            unlock(ses);
+            unlock(session);
         } else {
             LOG.debug("No HttpSession created... Cannot save session scoped variables.");
         }
@@ -406,18 +405,18 @@ public class ScopeInterceptor extends AbstractInterceptor implements PreResultLi
     }
 
     /* (non-Javadoc)
-     * @see com.opensymphony.xwork2.interceptor.Interceptor#intercept(com.opensymphony.xwork2.ActionInvocation)
+     * @see org.apache.struts2.interceptor.Interceptor#intercept(org.apache.struts2.ActionInvocation)
      */
     public String intercept(ActionInvocation invocation) throws Exception {
-        String result = null;
-        Map ses = ActionContext.getContext().getSession();
+        String result;
+        Map<String, Object> session = ActionContext.getContext().getSession();
         before(invocation);
         try {
             result = invocation.invoke();
             after(invocation, result);
         } finally {
-            if (ses != null) {
-                unlock(ses);
+            if (session != null) {
+                unlock(session);
             }
         }
 

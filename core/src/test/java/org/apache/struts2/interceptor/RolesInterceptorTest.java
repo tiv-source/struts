@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,16 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.interceptor;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.struts2.StrutsInternalTestCase;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
-import com.mockobjects.servlet.MockHttpServletRequest;
-import com.mockobjects.servlet.MockHttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class RolesInterceptorTest extends StrutsInternalTestCase {
 
@@ -130,9 +128,8 @@ public class RolesInterceptorTest extends StrutsInternalTestCase {
 
     public void testHandleRejection() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
-        response.setExpectedError(response.SC_FORBIDDEN);
         interceptor.handleRejection(null, response);
-        response.verify();
+        assertEquals(HttpServletResponse.SC_FORBIDDEN, response.getStatus());
     }
     
     public void testAreRolesValid() throws Exception {

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
-import com.opensymphony.xwork2.config.ConfigurationException;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.util.ValueStack;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.util.TextParseUtil;
+import org.apache.struts2.util.ValueStack;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.struts2.StrutsConstants;
@@ -33,17 +34,23 @@ import org.apache.struts2.components.template.Template;
 import org.apache.struts2.components.template.TemplateEngine;
 import org.apache.struts2.components.template.TemplateEngineManager;
 import org.apache.struts2.components.template.TemplateRenderingContext;
+import org.apache.struts2.dispatcher.AttributeMap;
+import org.apache.struts2.dispatcher.StaticContentLoader;
+import org.apache.struts2.util.ComponentUtils;
 import org.apache.struts2.util.TextProviderHelper;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
 import org.apache.struts2.views.util.ContextUtil;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+
+import static java.util.Collections.emptyMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.struts2.dispatcher.DispatcherConstants.ATTRIBUTES;
 
 /**
  * <p>
@@ -297,7 +304,7 @@ import java.util.Map;
  * <!-- END SNIPPET: javascriptRelatedAttributes -->
  *
  * <!-- START SNIPPET: tooltipattributes -->
- *
+ * <strong>Deprecated since 7.0.1</strong
  * <table border="1" summary="">
  *  <tr>
  *     <td>Attribute</td>
@@ -320,7 +327,7 @@ import java.util.Map;
  *    <tr>
  *      <td>tooltipIcon</td>
  *      <td>String</td>
- *      <td>/struts/static/tooltip/tooltip.gif</td>
+ *      <td>/static/tooltip/tooltip.gif</td>
  *      <td>The url to the tooltip icon</td>
  *   <tr>
  *      <td>tooltipDelay</td>
@@ -341,7 +348,7 @@ import java.util.Map;
  *
  * <!-- START SNIPPET: tooltipdescription -->
  * <p>
- * <b>tooltipConfig is deprecated, use individual tooltip configuration attributes instead </b>
+ * <strong>tooltipConfig is deprecated, use individual tooltip configuration attributes instead </strong>
  * </p>
  *
  * <p>
@@ -377,7 +384,7 @@ import java.util.Map;
  *
  * <pre>
  * <!-- START SNIPPET: tooltipexample -->
- *
+ * <strong>Deprecated since 7.0.1</strong>
  * &lt;!-- Example 1: --&gt;
  * &lt;s:form
  *          tooltipDelay="500"
@@ -434,7 +441,15 @@ import java.util.Map;
  *
  */
 public abstract class UIBean extends Component {
+
     private static final Logger LOG = LogManager.getLogger(UIBean.class);
+
+    static final String TEMPLATE_DIR = "templateDir";
+    static final String THEME = "theme";
+
+    protected static final String ATTR_FIELD_VALUE = "fieldValue";
+    protected static final String ATTR_NAME_VALUE = "nameValue";
+    protected static final String ATTR_VALUE = "value";
 
     protected HttpServletRequest request;
     protected HttpServletResponse response;
@@ -509,6 +524,8 @@ public abstract class UIBean extends Component {
     protected String defaultTemplateDir;
     protected String defaultUITheme;
     protected String uiThemeExpansionToken;
+    protected String uiStaticContentPath;
+
     protected TemplateEngineManager templateEngineManager;
 
     @Inject(StrutsConstants.STRUTS_UI_TEMPLATEDIR)
@@ -526,11 +543,17 @@ public abstract class UIBean extends Component {
         this.uiThemeExpansionToken = uiThemeExpansionToken;
     }
 
+    @Inject(StrutsConstants.STRUTS_UI_STATIC_CONTENT_PATH)
+    public void setStaticContentPath(String uiStaticContentPath) {
+        this.uiStaticContentPath = StaticContentLoader.Validator.validateStaticContentPath(uiStaticContentPath);
+    }
+
     @Inject
     public void setTemplateEngineManager(TemplateEngineManager mgr) {
         this.templateEngineManager = mgr;
     }
 
+    @Override
     public boolean end(Writer writer, String body) {
         evaluateParams();
         try {
@@ -557,16 +580,13 @@ public abstract class UIBean extends Component {
     protected abstract String getDefaultTemplate();
 
     protected Template buildTemplateName(String myTemplate, String myDefaultTemplate) {
-        String template = myDefaultTemplate;
+        String templateName = myDefaultTemplate;
 
         if (myTemplate != null) {
-            template = findString(myTemplate);
+            templateName = findString(myTemplate);
         }
 
-        String templateDir = getTemplateDir();
-        String theme = getTheme();
-
-        return new Template(templateDir, theme, template);
+        return new Template(getTemplateDir(), getTheme(), templateName);
 
     }
 
@@ -578,82 +598,86 @@ public abstract class UIBean extends Component {
 
         LOG.debug("Rendering template {}", template);
 
-        final TemplateRenderingContext context = new TemplateRenderingContext(template, writer, getStack(), getParameters(), this);
+        final TemplateRenderingContext context = new TemplateRenderingContext(template, writer, getStack(), getAttributes(), this);
         engine.renderTemplate(context);
     }
 
     public String getTemplateDir() {
-        String templateDir = null;
+        String result = null;
 
         if (this.templateDir != null) {
-            templateDir = findString(this.templateDir);
+            result = findString(this.templateDir);
         }
 
-        // If templateDir is not explicitly given,
-        // try to find attribute which states the dir set to use
-        if (StringUtils.isBlank(templateDir)) {
-            templateDir = stack.findString("#attr.templateDir");
+        // Check Request, Session, Application scopes
+        if (isBlank(result)) {
+            result = (String) getAttrMap().get(TEMPLATE_DIR);
         }
 
         // Default template set
-        if (StringUtils.isBlank(templateDir)) {
-            templateDir = defaultTemplateDir;
+        if (isBlank(result)) {
+            result = defaultTemplateDir;
         }
 
         // Defaults to 'template'
-        if (StringUtils.isBlank(templateDir)) {
-            templateDir = "template";
+        if (isBlank(result)) {
+            result = "template";
         }
 
-        return templateDir;
+        return result;
     }
 
     public String getTheme() {
-        String theme = null;
+        String result = null;
 
         if (this.theme != null) {
-            theme = findString(this.theme);
+            result = findString(this.theme);
         }
 
-        if (StringUtils.isBlank(theme)) {
+        if (isBlank(result)) {
             Form form = (Form) findAncestor(Form.class);
             if (form != null) {
-                theme = form.getTheme();
+                result = form.getTheme();
             }
         }
 
-        // If theme set is not explicitly given,
-        // try to find attribute which states the theme set to use
-        if (StringUtils.isBlank(theme)) {
-            theme = stack.findString("#attr.theme");
+        // Check Request, Session, Application scopes
+        if (isBlank(result)) {
+            result = (String) getAttrMap().get(THEME);
         }
 
         // Default theme set
-        if (StringUtils.isBlank(theme)) {
-            theme = defaultUITheme;
+        if (isBlank(result)) {
+            result = defaultUITheme;
         }
 
-        return theme;
+        return result;
+    }
+
+    private Map<String, Object> getAttrMap() {
+        AttributeMap attrMap = (AttributeMap) getStack().getContext().get(ATTRIBUTES);
+        return attrMap != null ? attrMap : emptyMap();
     }
 
     public void evaluateParams() {
-        String templateDir = getTemplateDir();
-        String theme = getTheme();
-        
-        addParameter("templateDir", templateDir);
-        addParameter("theme", theme);
+        String gotTheme = getTheme();
+
+        addParameter(TEMPLATE_DIR, getTemplateDir());
+        addParameter(THEME, gotTheme);
         addParameter("template", template != null ? findString(template) : getDefaultTemplate());
         addParameter("dynamicAttributes", dynamicAttributes);
         addParameter("themeExpansionToken", uiThemeExpansionToken);
-        addParameter("expandTheme", uiThemeExpansionToken + theme);
+        addParameter("expandTheme", uiThemeExpansionToken + gotTheme);
 
-        String name = null;
+        addParameter("staticContentPath", findString(uiStaticContentPath));
+
+        String translatedName = null;
         String providedLabel = null;
 
         if (this.key != null) {
 
             if(this.name == null) {
-                this.name = key;
+                setName(key);
             }
 
             if(this.label == null) {
@@ -663,8 +687,8 @@ public abstract class UIBean extends Component {
         }
 
         if (this.name != null) {
-            name = findString(this.name);
-            addParameter("name", name);
+            translatedName = findString(this.name);
+            addParameter("name", translatedName);
         }
 
         if (label != null) {
@@ -681,7 +705,8 @@ public abstract class UIBean extends Component {
         }
 
         if (labelPosition != null) {
-            addParameter("labelposition", findString(labelPosition));
+            String labelPosition = findString(this.labelPosition);
+            addParameter("labelPosition", labelPosition);
         }
 
         if (requiredPosition != null) {
@@ -691,13 +716,15 @@ public abstract class UIBean extends Component {
         if (errorPosition != null) {
             addParameter("errorposition", findString(errorPosition));
         }
-        
+
         if (requiredLabel != null) {
-            addParameter("required", findValue(requiredLabel, Boolean.class));
+            Object parsedValue = findValue(requiredLabel, Boolean.class);
+            addParameter("required", parsedValue == null ? Boolean.valueOf(requiredLabel) : parsedValue);
         }
 
         if (disabled != null) {
-            addParameter("disabled", findValue(disabled, Boolean.class));
+            Object parsedValue = findValue(disabled, Boolean.class);
+            addParameter("disabled", parsedValue == null ? Boolean.valueOf(disabled) : parsedValue);
         }
 
         if (tabindex != null) {
@@ -784,31 +811,7 @@ public abstract class UIBean extends Component {
             addParameter("title", findString(title));
         }
 
-
-        // see if the value was specified as a parameter already
-        if (parameters.containsKey("value")) {
-            parameters.put("nameValue", parameters.get("value"));
-        } else {
-            if (evaluateNameValue()) {
-                final Class valueClazz = getValueClassType();
-
-                if (valueClazz != null) {
-                    if (value != null) {
-                        addParameter("nameValue", findValue(value, valueClazz));
-                    } else if (name != null) {
-                        String expr = completeExpressionIfAltSyntax(name);
-
-                        addParameter("nameValue", findValue(expr, valueClazz));
-                    }
-                } else {
-                    if (value != null) {
-                        addParameter("nameValue", findValue(value));
-                    } else if (name != null) {
-                        addParameter("nameValue", findValue(name));
-                    }
-                }
-            }
-        }
+        applyValueParameter(translatedName);
 
         final Form form = (Form) findAncestor(Form.class);
 
@@ -816,12 +819,12 @@ public abstract class UIBean extends Component {
         populateComponentHtmlId(form);
 
         if (form != null ) {
-            addParameter("form", form.getParameters());
+            addParameter("form", form.getAttributes());
 
-            if ( name != null ) {
+            if ( translatedName != null ) {
                 // list should have been created by the form component
-                List<String> tags = (List<String>) form.getParameters().get("tagNames");
-                tags.add(name);
+                List<String> tags = (List<String>) form.getAttributes().get("tagNames");
+                tags.add(translatedName);
             }
         }
 
@@ -833,19 +836,18 @@ public abstract class UIBean extends Component {
         if (tooltip != null) {
             addParameter("tooltip", findString(tooltip));
 
-            Map tooltipConfigMap = getTooltipConfig(this);
+            Map<String, String> tooltipConfigMap = getTooltipConfig(this);
 
             if (form != null) { // inform the containing form that we need tooltip javascript included
                 form.addParameter("hasTooltip", Boolean.TRUE);
 
                 // tooltipConfig defined in component itself will take precedence
                 // over those defined in the containing form
-                Map overallTooltipConfigMap = getTooltipConfig(form);
+                Map<String, String> overallTooltipConfigMap = getTooltipConfig(form);
                 overallTooltipConfigMap.putAll(tooltipConfigMap); // override parent form's tooltip config
 
-                for (Object o : overallTooltipConfigMap.entrySet()) {
-                    Map.Entry entry = (Map.Entry) o;
-                    addParameter((String) entry.getKey(), entry.getValue());
+                for (Map.Entry<String, String> entry : overallTooltipConfigMap.entrySet()) {
+                    addParameter(entry.getKey(), entry.getValue());
                 }
             }
             else {
@@ -853,28 +855,28 @@ public abstract class UIBean extends Component {
             }
 
             //TODO: this is to keep backward compatibility, remove once when tooltipConfig is dropped
-            String  jsTooltipEnabled = (String) getParameters().get("jsTooltipEnabled");
+            String  jsTooltipEnabled = (String) getAttributes().get("jsTooltipEnabled");
             if (jsTooltipEnabled != null)
                 this.javascriptTooltip = jsTooltipEnabled;
 
             //TODO: this is to keep backward compatibility, remove once when tooltipConfig is dropped
-            String tooltipIcon = (String) getParameters().get("tooltipIcon");
+            String tooltipIcon = (String) getAttributes().get("tooltipIcon");
             if (tooltipIcon != null)
                 this.addParameter("tooltipIconPath", tooltipIcon);
             if (this.tooltipIconPath != null)
                 this.addParameter("tooltipIconPath", findString(this.tooltipIconPath));
 
             //TODO: this is to keep backward compatibility, remove once when tooltipConfig is dropped
-            String tooltipDelayParam = (String) getParameters().get("tooltipDelay");
+            String tooltipDelayParam = (String) getAttributes().get("tooltipDelay");
             if (tooltipDelayParam != null)
                 this.addParameter("tooltipDelay", tooltipDelayParam);
             if (this.tooltipDelay != null)
                 this.addParameter("tooltipDelay", findString(this.tooltipDelay));
 
             if (this.javascriptTooltip != null) {
-                Boolean jsTooltips = (Boolean) findValue(this.javascriptTooltip, Boolean.class);
+                Object jsTooltips = findValue(this.javascriptTooltip, Boolean.class);
                 //TODO use a Boolean model when tooltipConfig is dropped
-                this.addParameter("jsTooltipEnabled", jsTooltips.toString());
+                this.addParameter("jsTooltipEnabled", jsTooltips == null ? this.javascriptTooltip : jsTooltips.toString());
 
                 if (form != null)
                     form.addParameter("hasTooltip", jsTooltips);
@@ -883,13 +885,63 @@ public abstract class UIBean extends Component {
             }
         }
 
+        // to be used with the CSP interceptor - adds the nonce value as a parameter to be accessed from ftl files
+        HttpSession session = stack.getActionContext().getServletRequest().getSession(false);
+        Object nonceValue = session != null ? session.getAttribute("nonce") : null;
+
+        if (nonceValue != null) {
+            addParameter("nonce", nonceValue.toString());
+        } else {
+            LOG.debug("Session is not active, cannot obtain nonce value");
+        }
+
         evaluateExtraParams();
     }
 
-	protected String escape(String name) {
+    /**
+     * Tries to calculate the "value" parameter based either on the provided {@link #value} or {@link #name}
+     * @param translatedName the already evaluated {@link #name}
+     */
+    protected void applyValueParameter(String translatedName) {
+        // see if the value has been specified as a parameter already
+        if (attributes.containsKey(ATTR_VALUE)) {
+            attributes.put(ATTR_NAME_VALUE, attributes.get(ATTR_VALUE));
+        } else {
+            if (evaluateNameValue()) {
+                final Class<?> valueClazz = getValueClassType();
+
+                if (valueClazz != null) {
+                    if (value != null) {
+                        addParameter(ATTR_NAME_VALUE, findValue(value, valueClazz));
+                    } else if (translatedName != null) {
+                        processTranslatedName(translatedName, (expr) -> findValue(expr, valueClazz));
+                    }
+                } else {
+                    if (value != null) {
+                        addParameter(ATTR_NAME_VALUE, findValue(value));
+                    } else if (translatedName != null) {
+                        processTranslatedName(translatedName, this::findValue);
+                    }
+                }
+            }
+        }
+    }
+
+    private void processTranslatedName(String translatedName, Function<String, Object> evaluator) {
+        boolean evaluated = !translatedName.equals(this.name);
+        boolean reevaluate = !evaluated || isAcceptableExpression(translatedName);
+        if (!reevaluate) {
+            addParameter(ATTR_NAME_VALUE, translatedName);
+        } else {
+            String expr = completeExpression(translatedName);
+            addParameter(ATTR_NAME_VALUE, evaluator.apply(expr));
+        }
+    }
+
+    protected String escape(String name) {
         // escape any possible values that can make the ID painful to work with in JavaScript
         if (name != null) {
-            return name.replaceAll("[\\/\\.\\[\\]]", "_");
+            return name.replaceAll("[^a-zA-Z0-9_]", "_");
         } else {
             return null;
         }
@@ -916,7 +968,7 @@ public abstract class UIBean extends Component {
         return true;
     }
 
-    protected Class getValueClassType() {
+    protected Class<?> getValueClassType() {
         return String.class;
     }
 
@@ -933,47 +985,47 @@ public abstract class UIBean extends Component {
             form.addParameter("customOnsubmitEnabled", Boolean.TRUE);
         } else {
             if (LOG.isWarnEnabled()) {
-        	LOG.warn("Cannot find an Ancestor form, custom onsubmit is NOT enabled");
+                LOG.warn("Cannot find an Ancestor form, custom onsubmit is NOT enabled");
             }
         }
     }
 
-    protected Map getTooltipConfig(UIBean component) {
-        Object tooltipConfigObj = component.getParameters().get("tooltipConfig");
-        Map<String, String> tooltipConfig = new LinkedHashMap<>();
+    @Deprecated(since = "7.0.1", forRemoval = true)
+    protected Map<String, String> getTooltipConfig(UIBean component) {
+        Object tooltipConfigObj = component.getAttributes().get("tooltipConfig");
+        Map<String, String> result = new LinkedHashMap<>();
 
         if (tooltipConfigObj instanceof Map) {
             // we get this if its configured using
             // 1] UI component's tooltipConfig attribute  OR
             // 2] <param name="tooltip" value="" /> param tag value attribute
 
-            tooltipConfig = new LinkedHashMap<>((Map) tooltipConfigObj);
-        } else if (tooltipConfigObj instanceof String) {
+            result = new LinkedHashMap<String, String>((Map) tooltipConfigObj);
+        } else if (tooltipConfigObj instanceof String tooltipConfigStr) {
 
             // we get this if its configured using
             // <param name="tooltipConfig"> ... </param> tag's body
-            String tooltipConfigStr = (String) tooltipConfigObj;
             String[] tooltipConfigArray = tooltipConfigStr.split("\\|");
 
             for (String aTooltipConfigArray : tooltipConfigArray) {
                 String[] configEntry = aTooltipConfigArray.trim().split("=");
-                String key = configEntry[0].trim();
-                String value;
+                String configKey = configEntry[0].trim();
+                String configValue;
                 if (configEntry.length > 1) {
-                    value = configEntry[1].trim();
-                    tooltipConfig.put(key, value);
+                    configValue = configEntry[1].trim();
+                    result.put(configKey, configValue);
                 } else {
-                    LOG.warn("component {} tooltip config param {} has no value defined, skipped", component, key);
+                    LOG.warn("component {} tooltip config param {} has no value defined, skipped", component, configKey);
                 }
             }
         }
         if (component.javascriptTooltip != null)
-            tooltipConfig.put("jsTooltipEnabled", component.javascriptTooltip);
+            result.put("jsTooltipEnabled", component.javascriptTooltip);
         if (component.tooltipIconPath != null)
-            tooltipConfig.put("tooltipIcon", component.tooltipIconPath);
+            result.put("tooltipIcon", component.tooltipIconPath);
         if (component.tooltipDelay != null)
-            tooltipConfig.put("tooltipDelay", component.tooltipDelay);
-        return tooltipConfig;
+            result.put("tooltipDelay", component.tooltipDelay);
+        return result;
     }
 
     /**
@@ -995,16 +1047,16 @@ public abstract class UIBean extends Component {
         String generatedId;
         if (id != null) {
             // this check is needed for backwards compatibility with 2.1.x
-            tryId = findStringIfAltSyntax(id);
+            tryId = findString(id);
         } else if (null == (generatedId = escape(name != null ? findString(name) : null))) {
             LOG.debug("Cannot determine id attribute for [{}], consider defining id, name or key attribute!", this);
             tryId = null;
         } else if (form != null) {
-            tryId = form.getParameters().get("id") + "_" + generatedId;
+            tryId = form.getAttributes().get("id") + "_" + generatedId;
         } else {
             tryId = generatedId;
         }
-        
+
         //fix for https://issues.apache.org/jira/browse/WW-4299
         //do not assign value to id if tryId is null
         if (tryId != null) {
@@ -1023,9 +1075,7 @@ public abstract class UIBean extends Component {
 
     @StrutsTagAttribute(description="HTML id attribute")
     public void setId(String id) {
-        if (id != null) {
-            this.id = findString(id);
-        }
+        this.id = id;
     }
 
     @StrutsTagAttribute(description="The template directory.")
@@ -1049,11 +1099,6 @@ public abstract class UIBean extends Component {
 
     @StrutsTagAttribute(description="The css class to use for element")
     public void setCssClass(String cssClass) {
-        this.cssClass = cssClass;
-    }
-
-    @StrutsTagAttribute(description="The css class to use for element - it's an alias of cssClass attribute.")
-    public void setClass(String cssClass) {
         this.cssClass = cssClass;
     }
 
@@ -1098,7 +1143,7 @@ public abstract class UIBean extends Component {
     }
 
     @StrutsTagAttribute(description="Define label position of form element (top/left)")
-    public void setLabelposition(String labelPosition) {
+    public void setLabelPosition(String labelPosition) {
         this.labelPosition = labelPosition;
     }
 
@@ -1111,9 +1156,16 @@ public abstract class UIBean extends Component {
     public void setErrorPosition(String errorPosition) {
         this.errorPosition = errorPosition;
     }
-    
+
     @StrutsTagAttribute(description="The name to set for element")
     public void setName(String name) {
+        if (name != null && name.startsWith("$")) {
+            LOG.error("The name attribute should not usually be a templating variable." +
+                      " This can cause a critical vulnerability if the resolved value is derived from user input." +
+                      " If you are certain that you require this behaviour, please use OGNL expression syntax ( %{expr} ) instead.",
+                    new IllegalStateException());
+            return;
+        }
         this.name = name;
     }
 
@@ -1208,11 +1260,13 @@ public abstract class UIBean extends Component {
     }
 
     @StrutsTagAttribute(description="Set the tooltip of this particular component")
+    @Deprecated(since = "7.0.1", forRemoval = true)
     public void setTooltip(String tooltip) {
         this.tooltip = tooltip;
     }
 
     @StrutsTagAttribute(description="Deprecated. Use individual tooltip configuration attributes instead.")
+    @Deprecated(since = "7.0.1", forRemoval = true)
     public void setTooltipConfig(String tooltipConfig) {
         this.tooltipConfig = tooltipConfig;
     }
@@ -1223,48 +1277,70 @@ public abstract class UIBean extends Component {
     }
 
     @StrutsTagAttribute(description="Use JavaScript to generate tooltips", type="Boolean", defaultValue="false")
+    @Deprecated(since = "7.0.1", forRemoval = true)
     public void setJavascriptTooltip(String javascriptTooltip) {
         this.javascriptTooltip = javascriptTooltip;
     }
 
     @StrutsTagAttribute(description="CSS class applied to JavaScrip tooltips", defaultValue="StrutsTTClassic")
+    @Deprecated(since = "7.0.1", forRemoval = true)
     public void setTooltipCssClass(String tooltipCssClass) {
         this.tooltipCssClass = tooltipCssClass;
     }
 
     @StrutsTagAttribute(description="Delay in milliseconds, before showing JavaScript tooltips ",
         defaultValue="Classic")
+    @Deprecated(since = "7.0.1", forRemoval = true)
     public void setTooltipDelay(String tooltipDelay) {
         this.tooltipDelay = tooltipDelay;
     }
 
     @StrutsTagAttribute(description="Icon path used for image that will have the tooltip")
+    @Deprecated(since = "7.0.1", forRemoval = true)
     public void setTooltipIconPath(String tooltipIconPath) {
         this.tooltipIconPath = tooltipIconPath;
     }
 
-	public void setDynamicAttributes(Map<String, Object> tagDynamicAttributes) {
-        for (String key : tagDynamicAttributes.keySet()) {
-            if (!isValidTagAttribute(key)) {
-                dynamicAttributes.put(key, tagDynamicAttributes.get(key));
+    public void setDynamicAttributes(Map<String, String> tagDynamicAttributes) {
+        for (Map.Entry<String, String> entry : tagDynamicAttributes.entrySet()) {
+            String attrName = entry.getKey();
+            String attrValue = entry.getValue();
+
+            if (!isValidTagAttribute(attrName)) {
+                if (ComponentUtils.containsExpression(attrValue) && !lazyEvaluation()) {
+                    String translated = TextParseUtil.translateVariables('%', attrValue, stack);
+                    dynamicAttributes.put(attrName, ObjectUtils.defaultIfNull(translated, attrValue));
+                } else {
+                    dynamicAttributes.put(attrName, attrValue);
+                }
             }
         }
     }
 
-	@Override
-	/**
-	 * supports dynamic attributes for freemarker ui tags
-	 * @see https://issues.apache.org/jira/browse/WW-3174
-     * @see https://issues.apache.org/jira/browse/WW-4166
-	 */
-    public void copyParams(Map params) {
-        super.copyParams(params);
-        for (Object o : params.entrySet()) {
-            Map.Entry entry = (Map.Entry) o;
-            String key = (String) entry.getKey();
-            if(!isValidTagAttribute(key) && !key.equals("dynamicAttributes"))
-                dynamicAttributes.put(key, entry.getValue());
+    /**
+     * supports dynamic attributes for freemarker ui tags
+     * @see <a href="https://issues.apache.org/jira/browse/WW-3174">WW-3174</a>
+     * @see <a href="https://issues.apache.org/jira/browse/WW-4166">WW-4166</a>
+     */
+    @Override
+    public void copyAttributes(Map<String, Object> attributesToCopy) {
+        super.copyAttributes(attributesToCopy);
+        for (Map.Entry<String, Object>entry : attributesToCopy.entrySet()) {
+            String entryKey = entry.getKey();
+            if (!isValidTagAttribute(entryKey) && !entryKey.equals("dynamicAttributes")) {
+                dynamicAttributes.put(entryKey, entry.getValue());
+            }
         }
+    }
+
+    /**
+     * Used to avoid evaluating attributes in {@link #evaluateParams()} or {@link #evaluateExtraParams()}
+     * as evaluation will happen in tag's template
+     *
+     * @return boolean false if evaluation should be performed in ftl
+     */
+    protected boolean lazyEvaluation() {
+        return false;
     }
 
 }

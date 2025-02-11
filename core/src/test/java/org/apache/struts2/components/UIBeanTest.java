@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,119 +16,130 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.components;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.util.ValueStack;
 import org.apache.struts2.StrutsInternalTestCase;
+import org.apache.struts2.components.template.Template;
+import org.apache.struts2.components.template.TemplateEngine;
+import org.apache.struts2.components.template.TemplateEngineManager;
+import org.apache.struts2.dispatcher.SessionMap;
+import org.apache.struts2.dispatcher.StaticContentLoader;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
 
 import java.util.Collections;
 import java.util.Map;
 
-/**
- *
- * @version $Date$ $Id$
- */
+import static org.apache.struts2.security.DefaultNotExcludedAcceptedPatternsCheckerTest.NO_EXCLUSION_ACCEPT_ALL_PATTERNS_CHECKER;
+
 public class UIBeanTest extends StrutsInternalTestCase {
 
-    public void testPopulateComponentHtmlId1() throws Exception {
+    private UIBean bean;
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        bean = new UIBean(stack, req, res) {
+            @Override
+            protected String getDefaultTemplate() {
+                return null;
+            }
+        };
+    }
+
+    public void testPopulateComponentHtmlId1() {
         ValueStack stack = ActionContext.getContext().getValueStack();
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
 
         Form form = new Form(stack, req, res);
-        form.getParameters().put("id", "formId");
+        form.getAttributes().put("id", "formId");
 
         TextField txtFld = new TextField(stack, req, res);
         txtFld.setId("txtFldId");
 
         txtFld.populateComponentHtmlId(form);
 
-        assertEquals("txtFldId", txtFld.getParameters().get("id"));
+        assertEquals("txtFldId", txtFld.getAttributes().get("id"));
     }
 
-    public void testPopulateComponentHtmlIdWithOgnl() throws Exception {
+    public void testPopulateComponentHtmlIdWithOgnl() {
         ValueStack stack = ActionContext.getContext().getValueStack();
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
 
         Form form = new Form(stack, req, res);
-        form.getParameters().put("id", "formId");
+        form.getAttributes().put("id", "formId");
 
         TextField txtFld = new TextField(stack, req, res);
         txtFld.setName("txtFldName%{'1'}");
 
         txtFld.populateComponentHtmlId(form);
 
-        assertEquals("formId_txtFldName1", txtFld.getParameters().get("id"));
+        assertEquals("formId_txtFldName1", txtFld.getAttributes().get("id"));
     }
 
-    public void testPopulateComponentHtmlId2() throws Exception {
+    public void testPopulateComponentHtmlId2() {
         ValueStack stack = ActionContext.getContext().getValueStack();
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
 
         Form form = new Form(stack, req, res);
-        form.getParameters().put("id", "formId");
+        form.getAttributes().put("id", "formId");
 
         TextField txtFld = new TextField(stack, req, res);
         txtFld.setName("txtFldName");
 
         txtFld.populateComponentHtmlId(form);
 
-        assertEquals("formId_txtFldName", txtFld.getParameters().get("id"));
+        assertEquals("formId_txtFldName", txtFld.getAttributes().get("id"));
     }
 
-    public void testPopulateComponentHtmlWithoutNameAndId() throws Exception {
+    public void testPopulateComponentHtmlWithoutNameAndId() {
         ValueStack stack = ActionContext.getContext().getValueStack();
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
 
         Form form = new Form(stack, req, res);
-        form.getParameters().put("id", "formId");
+        form.getAttributes().put("id", "formId");
 
         TextField txtFld = new TextField(stack, req, res);
 
         txtFld.populateComponentHtmlId(form);
 
-        assertEquals(null, txtFld.getParameters().get("id"));
+        assertNull(txtFld.getAttributes().get("id"));
     }
 
-    public void testEscape() throws Exception {
-        ValueStack stack = ActionContext.getContext().getValueStack();
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        MockHttpServletResponse res = new MockHttpServletResponse();
-        UIBean bean = new UIBean(stack, req, res) {
-            protected String getDefaultTemplate() {
-                return null;
-            }
-        };
-
+    public void testEscape() {
         assertEquals(bean.escape("hello[world"), "hello_world");
         assertEquals(bean.escape("hello.world"), "hello_world");
         assertEquals(bean.escape("hello]world"), "hello_world");
-        assertEquals(bean.escape("hello!world"), "hello!world");
-        assertEquals(bean.escape("hello!@#$%^&*()world"), "hello!@#$%^&*()world");
+        assertEquals(bean.escape("hello!world"), "hello_world");
+        assertEquals(bean.escape("hello!@#$%^&*()world"), "hello__________world");
     }
 
-    public void testEscapeId() throws Exception {
+    public void testEscapeId() {
         ValueStack stack = ActionContext.getContext().getValueStack();
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
 
         Form form = new Form(stack, req, res);
-        form.getParameters().put("id", "formId");
+        form.getAttributes().put("id", "formId");
 
         TextField txtFld = new TextField(stack, req, res);
         txtFld.setName("foo/bar");
         txtFld.populateComponentHtmlId(form);
-        assertEquals("formId_foo_bar", txtFld.getParameters().get("id"));
+        assertEquals("formId_foo_bar", txtFld.getAttributes().get("id"));
     }
 
-    public void testGetThemeFromForm() throws Exception {
+    public void testGetThemeFromForm() {
         ValueStack stack = ActionContext.getContext().getValueStack();
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
@@ -142,26 +151,307 @@ public class UIBeanTest extends StrutsInternalTestCase {
         assertEquals("foo", txtFld.getTheme());
     }
 
-    public void testGetThemeFromContext() throws Exception {
+    public void testMergeTemplateNullEngineException() {
         ValueStack stack = ActionContext.getContext().getValueStack();
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
-        Map context = Collections.singletonMap("theme", "bar");
-        ActionContext.getContext().put("attr", context);
-
+        //templateEngineManager that returns null as TemplateEngine
+        TemplateEngineManager templateEngineManager = new TemplateEngineManager() {
+            public TemplateEngine getTemplateEngine(Template template, String templateTypeOverride) {
+                return null;
+            }
+        };
         TextField txtFld = new TextField(stack, req, res);
-        assertEquals("bar", txtFld.getTheme());
+
+        txtFld.setTemplateEngineManager(templateEngineManager);
+
+        try {
+            txtFld.mergeTemplate(null, new Template(null, null, null));
+            fail("Exception not thrown");
+        } catch (final Exception e) {
+            assertTrue(e instanceof ConfigurationException);
+        }
     }
 
-    public void testGetThemeFromContextNonString() throws Exception {
+    public void testBuildTemplate() {
+        String defaultTemplateName = "default";
+        String customTemplateName = "custom";
         ValueStack stack = ActionContext.getContext().getValueStack();
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
-        Map context = Collections.singletonMap("theme", 12);
+
+        TextField txtFld = new TextField(stack, req, res);
+
+        Template defaultTemplate = txtFld.buildTemplateName(null, defaultTemplateName);
+        Template customTemplate = txtFld.buildTemplateName(customTemplateName, defaultTemplateName);
+
+        assertEquals(defaultTemplateName, defaultTemplate.getName());
+        assertEquals(customTemplateName, customTemplate.getName());
+    }
+
+    public void testGetTemplateDirExplicit() {
+        String explicitTemplateDir = "explicitTemplateDirectory";
+        String attrTemplateDir = "attrTemplateDirectory";
+        String defaultTemplateDir = "defaultTemplateDirectory";
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        Map<String, Object> context = Collections.singletonMap("templateDir", attrTemplateDir);
         ActionContext.getContext().put("attr", context);
 
         TextField txtFld = new TextField(stack, req, res);
-        assertEquals("12", txtFld.getTheme());
+        txtFld.setTemplateDir(explicitTemplateDir);
+        txtFld.setDefaultTemplateDir(defaultTemplateDir);
+
+        assertEquals(explicitTemplateDir, txtFld.getTemplateDir());
+    }
+
+    public void testGetTemplateDirDefault() {
+        String defaultTemplateDir = "defaultTemplateDirectory";
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        TextField txtFld = new TextField(stack, req, res);
+        txtFld.setDefaultTemplateDir(defaultTemplateDir);
+
+        assertEquals(defaultTemplateDir, txtFld.getTemplateDir());
+    }
+
+    public void testGetTemplateDirNoneSet() {
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        TextField txtFld = new TextField(stack, req, res);
+
+        assertEquals("template", txtFld.getTemplateDir());
+    }
+
+    public void testSetAccesskey() {
+        String accesskeyValue = "myAccesskey";
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext.getContext().withServletRequest(req);
+
+        TextField txtFld = new TextField(stack, req, res);
+        txtFld.setAccesskey(accesskeyValue);
+        txtFld.evaluateParams();
+
+        assertEquals(accesskeyValue, txtFld.getAttributes().get("accesskey"));
+    }
+
+    public void testValueParameterEvaluation() {
+        String value = "myValue";
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext.getContext().withServletRequest(req);
+
+        TextField txtFld = new TextField(stack, req, res);
+        txtFld.addParameter("value", value);
+        txtFld.evaluateParams();
+
+        assertEquals(value, txtFld.getAttributes().get("nameValue"));
+    }
+
+    public void testValueParameterRecursion() {
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext.getContext().withServletRequest(req);
+
+        stack.push(new Object() {
+            public String getMyValue() {
+                return "%{myBad}";
+            }
+
+            public String getMyBad() {
+                throw new IllegalStateException("Recursion detected!");
+            }
+        });
+
+        TextField txtFld = new TextField(stack, req, res);
+        container.inject(txtFld);
+        txtFld.setName("%{myValue}");
+        txtFld.evaluateParams();
+
+        assertEquals("%{myBad}", txtFld.getAttributes().get("nameValue"));
+        assertEquals("%{myBad}", txtFld.getAttributes().get("name"));
+    }
+
+    public void testValueNameParameterNotAccepted() {
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext.getContext().withServletRequest(req);
+
+        stack.push(new Object() {
+            public String getMyValueName() {
+                return "getMyValue()";
+            }
+
+            public String getMyValue() {
+                return "value";
+            }
+        });
+
+        TextField txtFld = new TextField(stack, req, res);
+        container.inject(txtFld);
+        txtFld.setName("%{myValueName}");
+        txtFld.evaluateParams();
+        assertEquals("getMyValue()", txtFld.getAttributes().get("name"));
+        assertEquals("getMyValue()", txtFld.getAttributes().get("nameValue"));
+
+        txtFld.setNotExcludedAcceptedPatterns(NO_EXCLUSION_ACCEPT_ALL_PATTERNS_CHECKER);
+        txtFld.evaluateParams();
+        assertEquals("getMyValue()", txtFld.getAttributes().get("name"));
+        assertEquals("value", txtFld.getAttributes().get("nameValue"));
+    }
+
+    public void testValueNameParameterGetterAccepted() {
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext.getContext().withServletRequest(req);
+
+        stack.push(new Object() {
+            public String getMyValue() {
+                return "value";
+            }
+        });
+
+        TextField txtFld = new TextField(stack, req, res);
+        container.inject(txtFld);
+        txtFld.setName("getMyValue()");
+        txtFld.evaluateParams();
+        assertEquals("getMyValue()", txtFld.getAttributes().get("name"));
+        assertEquals("value", txtFld.getAttributes().get("nameValue"));
+    }
+
+    public void testSetClass() {
+        String cssClass = "insertCssClassHere";
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext.getContext().withServletRequest(req);
+
+        TextField txtFld = new TextField(stack, req, res);
+        txtFld.setCssClass(cssClass);
+        txtFld.evaluateParams();
+
+        assertEquals(cssClass, txtFld.getAttributes().get("cssClass"));
+    }
+
+    public void testSetStyle() {
+        String cssStyle = "insertCssStyleHere";
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext.getContext().withServletRequest(req);
+
+        TextField txtFld = new TextField(stack, req, res);
+        txtFld.setStyle(cssStyle);
+        txtFld.evaluateParams();
+
+        assertEquals(cssStyle, txtFld.getAttributes().get("cssStyle"));
+    }
+
+    public void testNonce() {
+        String nonceVal = "r4nd0m";
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext actionContext = stack.getActionContext();
+        actionContext.withServletRequest(req);
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("nonce", nonceVal);
+        req.setSession(session);
+
+        actionContext.withSession(new SessionMap(req));
+
+        DoubleSelect dblSelect = new DoubleSelect(stack, req, res);
+        dblSelect.evaluateParams();
+
+        assertEquals(nonceVal, dblSelect.getAttributes().get("nonce"));
+    }
+
+    public void testNonceOfInvalidSession() {
+        String nonceVal = "r4nd0m";
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ActionContext actionContext = stack.getActionContext();
+        actionContext.withServletRequest(req);
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("nonce", nonceVal);
+        req.setSession(session);
+        actionContext.withSession(new SessionMap(req));
+
+        session.invalidate();
+
+        DoubleSelect dblSelect = new DoubleSelect(stack, req, res);
+        dblSelect.evaluateParams();
+
+        assertNull(dblSelect.getAttributes().get("nonce"));
+    }
+
+    public void testSetNullUiStaticContentPath() {
+        // given
+        ValueStack stack = ActionContext.getContext().getValueStack();
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        TextField field = new TextField(stack, req, res);
+
+        // when
+        field.setStaticContentPath(null);
+        // then
+        assertEquals(StaticContentLoader.DEFAULT_STATIC_CONTENT_PATH, field.uiStaticContentPath);
+
+        // when
+        field.setStaticContentPath(" ");
+        // then
+        assertEquals(StaticContentLoader.DEFAULT_STATIC_CONTENT_PATH, field.uiStaticContentPath);
+
+        // when
+        field.setStaticContentPath("content");
+        // then
+        assertEquals("/content", field.uiStaticContentPath);
+
+        // when
+        field.setStaticContentPath("/content");
+        // then
+        assertEquals("/content", field.uiStaticContentPath);
+
+        // when
+        field.setStaticContentPath("/content/");
+        // then
+        assertEquals("/content", field.uiStaticContentPath);
+    }
+
+    /**
+     * The {@code name} attribute of a {@link UIBean} is evaluated to determine the {@value UIBean#ATTR_NAME_VALUE}
+     * parameter value. Thus, it is imperative that the {@code name} attribute is not derived from user input as it will
+     * otherwise result in a critical SSTI vulnerability.
+     * <p>
+     * When using FreeMarker, if the {@code name} attribute is a templating variable that corresponds to a getter which
+     * returns user-controlled input, it will usually resolve to {@code null} when loading the corresponding Action,
+     * which results in a rendering error, giving developers strong feedback that the attribute is not set correctly.
+     * <p>
+     * In the case of Velocity, templating variables which resolve to {@code null} do not cause rendering errors, making
+     * this potentially critical mistake sometimes undetectable. By logging a prominent warning, Velocity developers are
+     * also given a clear indication that the {@code name} attribute is not set correctly.
+     * <p>
+     * If the name attribute should definitely correspond to a variable (it is NOT derived from user input), the warning
+     * can be suppressed by using the Struts OGNL expression syntax instead ( %{expr} ). This may be appropriate when
+     * defining Struts components within an Iterator or loop.
+     */
+    public void testPotentialDoubleEvaluationWarning() {
+        bean.setName("${someVar}");
+
+        assertNull(bean.name);
     }
 
 }

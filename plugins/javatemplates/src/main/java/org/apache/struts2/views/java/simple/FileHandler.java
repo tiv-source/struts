@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +33,6 @@ public class FileHandler extends AbstractTagHandler implements TagGenerator {
         a.addDefaultToEmpty("name", params.get("name"))
                 .add("type", "file")
                 .addIfExists("size", params.get("size"))
-                .addIfExists("value", params.get("nameValue"))
                 .addIfTrue("disabled", params.get("disabled"))
                 .addIfExists("accept", params.get("accept"))
                 .addIfExists("tabindex", params.get("tabindex"))

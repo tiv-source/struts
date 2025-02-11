@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,22 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.interceptor;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
-import com.opensymphony.xwork2.security.AcceptedPatternsChecker;
-import com.opensymphony.xwork2.security.ExcludedPatternsChecker;
-import com.opensymphony.xwork2.util.TextParseUtil;
-import com.opensymphony.xwork2.util.ValueStack;
+import jakarta.servlet.http.Cookie;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
 import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.action.CookiesAware;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.security.AcceptedPatternsChecker;
+import org.apache.struts2.security.ExcludedPatternsChecker;
+import org.apache.struts2.util.TextParseUtil;
+import org.apache.struts2.util.ValueStack;
 
-import javax.servlet.http.Cookie;
+import java.io.Serial;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -177,6 +175,7 @@ import java.util.Set;
  */
 public class CookieInterceptor extends AbstractInterceptor {
 
+    @Serial
     private static final long serialVersionUID = 4153142432948747305L;
 
     private static final Logger LOG = LogManager.getLogger(CookieInterceptor.class);
@@ -231,6 +230,7 @@ public class CookieInterceptor extends AbstractInterceptor {
         acceptedPatternsChecker.setAcceptedPatterns(commaDelimitedPattern);
     }
 
+    @Override
     public String intercept(ActionInvocation invocation) throws Exception {
         LOG.debug("start interception");
 
@@ -351,16 +351,16 @@ public class CookieInterceptor extends AbstractInterceptor {
     }
 
     /**
-     * Hook that set the <code>cookiesMap</code> into action that implements
-     * {@link CookiesAware}.
+     * Hook that set the <code>cookiesMap</code> into action that implements {@link CookiesAware}
+     * or {@link org.apache.struts2.action.CookiesAware}.
      *
      * @param action action object
      * @param cookiesMap map of cookies
      */
     protected void injectIntoCookiesAwareAction(Object action, Map<String, String> cookiesMap) {
-        if (action instanceof CookiesAware) {
+        if (action instanceof CookiesAware cookiesAware) {
             LOG.debug("Action [{}] implements CookiesAware, injecting cookies map [{}]", action, cookiesMap);
-            ((CookiesAware)action).setCookiesMap(cookiesMap);
+            cookiesAware.withCookies(cookiesMap);
         }
     }
 }

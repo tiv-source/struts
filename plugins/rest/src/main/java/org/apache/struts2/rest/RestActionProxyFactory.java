@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.rest;
 
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionProxy;
-import com.opensymphony.xwork2.DefaultActionProxyFactory;
-import com.opensymphony.xwork2.inject.Inject;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.ActionProxy;
+import org.apache.struts2.DefaultActionProxyFactory;
+import org.apache.struts2.inject.Inject;
 
 import java.util.Map;
 
@@ -34,11 +31,9 @@ import java.util.Map;
  */
 public class RestActionProxyFactory extends DefaultActionProxyFactory {
 
-    public static final String STRUTS_REST_NAMESPACE = "struts.rest.namespace";
-
     protected String namespace;
 
-    @Inject(value = STRUTS_REST_NAMESPACE, required = false)
+    @Inject(value = RestConstants.STRUTS_REST_NAMESPACE, required = false)
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }

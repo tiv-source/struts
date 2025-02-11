@@ -20,29 +20,32 @@
  */
 package org.apache.struts2.showcase.validation;
 
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 import org.apache.struts.beanvalidation.constraints.FieldMatch;
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.ParentPackage;
 import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 import org.apache.struts2.interceptor.validation.SkipValidation;
-import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.ScriptAssert;
 import org.hibernate.validator.constraints.URL;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.util.Date;
 
-/**
- * <!-- START SNIPPET: beanValidatationExample -->
- */
+// <!-- START SNIPPET: beanValidationExample -->
 @Namespace("/bean-validation")
 @ParentPackage("bean-validation")
 @Action(results = {
-        @Result(name = "input", location = "bean-validation.jsp"),
-        @Result(name = "success", location = "/WEB-INF/validation/successFieldValidatorsExample.jsp")
+    @Result(name = "input", location = "bean-validation.jsp"),
+    @Result(name = "success", location = "/WEB-INF/validation/successFieldValidatorsExample.jsp")
 })
 @FieldMatch(first = "fieldExpressionValidatorField", second = "requiredValidatorField", message = "requiredValidatorField and fieldExpressionValidatorField are not matching")
 @ScriptAssert(lang = "javascript", script = "_this.dateValidatorField != null && _this.dateValidatorField.before(new java.util.Date())", message = "Date need to before now")
@@ -82,10 +85,10 @@ public class BeanValidationExampleAction extends ActionSupport {
     private String fieldExpressionValidatorField = null;
 
     @Action(value = "bean-validation", results = {
-            @Result(name = "success", location = "bean-validation.jsp")
+        @Result(name = "success", location = "bean-validation.jsp")
     })
     @SkipValidation
-    public String beanValidation(){
+    public String beanValidation() {
         return SUCCESS;
     }
 
@@ -93,6 +96,7 @@ public class BeanValidationExampleAction extends ActionSupport {
         return dateValidatorField;
     }
 
+    @StrutsParameter
     public void setDateValidatorField(Date dateValidatorField) {
         this.dateValidatorField = dateValidatorField;
     }
@@ -101,6 +105,7 @@ public class BeanValidationExampleAction extends ActionSupport {
         return emailValidatorField;
     }
 
+    @StrutsParameter
     public void setEmailValidatorField(String emailValidatorField) {
         this.emailValidatorField = emailValidatorField;
     }
@@ -109,6 +114,7 @@ public class BeanValidationExampleAction extends ActionSupport {
         return integerValidatorField;
     }
 
+    @StrutsParameter
     public void setIntegerValidatorField(Integer integerValidatorField) {
         this.integerValidatorField = integerValidatorField;
     }
@@ -117,6 +123,7 @@ public class BeanValidationExampleAction extends ActionSupport {
         return regexValidatorField;
     }
 
+    @StrutsParameter
     public void setRegexValidatorField(String regexValidatorField) {
         this.regexValidatorField = regexValidatorField;
     }
@@ -125,6 +132,7 @@ public class BeanValidationExampleAction extends ActionSupport {
         return requiredStringValidatorField;
     }
 
+    @StrutsParameter
     public void setRequiredStringValidatorField(String requiredStringValidatorField) {
         this.requiredStringValidatorField = requiredStringValidatorField;
     }
@@ -133,6 +141,7 @@ public class BeanValidationExampleAction extends ActionSupport {
         return requiredValidatorField;
     }
 
+    @StrutsParameter
     public void setRequiredValidatorField(String requiredValidatorField) {
         this.requiredValidatorField = requiredValidatorField;
     }
@@ -141,6 +150,7 @@ public class BeanValidationExampleAction extends ActionSupport {
         return stringLengthValidatorField;
     }
 
+    @StrutsParameter
     public void setStringLengthValidatorField(String stringLengthValidatorField) {
         this.stringLengthValidatorField = stringLengthValidatorField;
     }
@@ -149,8 +159,8 @@ public class BeanValidationExampleAction extends ActionSupport {
         return fieldExpressionValidatorField;
     }
 
-    public void setFieldExpressionValidatorField(
-            String fieldExpressionValidatorField) {
+    @StrutsParameter
+    public void setFieldExpressionValidatorField(String fieldExpressionValidatorField) {
         this.fieldExpressionValidatorField = fieldExpressionValidatorField;
     }
 
@@ -158,13 +168,10 @@ public class BeanValidationExampleAction extends ActionSupport {
         return urlValidatorField;
     }
 
+    @StrutsParameter
     public void setUrlValidatorField(String urlValidatorField) {
         this.urlValidatorField = urlValidatorField;
     }
 }
 
-/**
- * <!-- END SNIPPET: beanValidatationExample -->
- */
-
-
+// <!-- END SNIPPET: beanValidationExample -->

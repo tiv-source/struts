@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +18,8 @@
  */
 package org.apache.struts.beanvalidation;
 
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.Result;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.result.Result;
 
 public class VoidResult implements Result {
     public void execute(ActionInvocation invocation) throws Exception {

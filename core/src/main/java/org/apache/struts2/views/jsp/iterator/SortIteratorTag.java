@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp.iterator;
 
-import java.util.Comparator;
-
-import javax.servlet.jsp.JspException;
-
-import org.apache.struts2.views.annotations.StrutsTag;
-import org.apache.struts2.views.annotations.StrutsTagAttribute;
+import jakarta.servlet.jsp.JspException;
 import org.apache.struts2.util.MakeIterator;
 import org.apache.struts2.util.SortIteratorFilter;
+import org.apache.struts2.views.annotations.StrutsTag;
+import org.apache.struts2.views.annotations.StrutsTagAttribute;
 import org.apache.struts2.views.jsp.StrutsBodyTagSupport;
 
+import java.io.Serial;
+import java.util.Comparator;
+
+import static java.util.Objects.requireNonNullElse;
 
 /**
  * <!-- START SNIPPET: javadoc -->
@@ -87,10 +85,11 @@ import org.apache.struts2.views.jsp.StrutsBodyTagSupport;
  * {@literal @}s.tag name="sort" tld-body-content="JSP"
  * description="Sort a List using a Comparator both passed in as the tag attribute."
  */
-@StrutsTag(name="sort", tldTagClass="org.apache.struts2.views.jsp.iterator.SortIteratorTag", 
+@StrutsTag(name="sort", tldTagClass="org.apache.struts2.views.jsp.iterator.SortIteratorTag",
         description="Sort a List using a Comparator both passed in as the tag attribute.")
 public class SortIteratorTag extends StrutsBodyTagSupport {
 
+    @Serial
     private static final long serialVersionUID = -7835719609764092235L;
 
     String comparatorAttr;
@@ -108,20 +107,23 @@ public class SortIteratorTag extends StrutsBodyTagSupport {
     public void setSource(String source) {
         sourceAttr = source;
     }
-    
+
     @StrutsTagAttribute(description="The name to store the resultant iterator into page context, if such name is supplied")
     public void setVar(String var) {
         this.var = var;
     }
 
+    @StrutsTagAttribute(description="Whether to clear all tag state during doEndTag() processing", type="Boolean", defaultValue="false")
+    @Override
+    public void setPerformClearTagStateForTagPoolingServers(boolean performClearTagStateForTagPoolingServers) {
+        super.setPerformClearTagStateForTagPoolingServers(performClearTagStateForTagPoolingServers);
+    }
+
+    @Override
     public int doStartTag() throws JspException {
         // Source
         Object srcToSort;
-        if (sourceAttr == null) {
-            srcToSort = findValue("top");
-        } else {
-            srcToSort = findValue(sourceAttr);
-        }
+        srcToSort = findValue(requireNonNullElse(sourceAttr, "top"));
         if (! MakeIterator.isIterable(srcToSort)) { // see if source is Iteratable
             throw new JspException("source ["+srcToSort+"] is not iteratable");
         }
@@ -141,20 +143,35 @@ public class SortIteratorTag extends StrutsBodyTagSupport {
 
         // push sorted iterator into stack, so nexted tag have access to it
         getStack().push(sortIteratorFilter);
-        if (var != null && var.length() > 0) {
+        if (var != null && !var.isEmpty()) {
             pageContext.setAttribute(var, sortIteratorFilter);
         }
 
         return EVAL_BODY_INCLUDE;
     }
 
+    @Override
     public int doEndTag() throws JspException {
         int returnVal =  super.doEndTag();
 
         // pop sorted list from stack at the end of tag
         getStack().pop();
         sortIteratorFilter = null;
+        // The super.doEndTag() above should ensure clearTagStateForTagPoolingServers() is called correctly,
+        // which should clean-up the sortIteratorFilter reference.
 
         return returnVal;
+    }
+
+    @Override
+    protected void clearTagStateForTagPoolingServers() {
+       if (!getPerformClearTagStateForTagPoolingServers()) {
+            return;  // If flag is false (default setting), do not perform any state clearing.
+        }
+        super.clearTagStateForTagPoolingServers();
+        this.comparatorAttr = null;
+        this.sourceAttr = null;
+        this.var = null;
+        this.sortIteratorFilter = null;
     }
 }

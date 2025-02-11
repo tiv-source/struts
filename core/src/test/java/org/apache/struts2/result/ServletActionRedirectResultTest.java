@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,21 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.result;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionProxy;
-import com.opensymphony.xwork2.ObjectFactory;
-import com.opensymphony.xwork2.config.entities.ActionConfig;
-import com.opensymphony.xwork2.config.entities.ResultConfig;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.ActionProxy;
+import org.apache.struts2.ObjectFactory;
+import org.apache.struts2.config.entities.ActionConfig;
+import org.apache.struts2.config.entities.ResultConfig;
+import org.apache.struts2.util.ValueStack;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
-import org.apache.struts2.result.ServletActionRedirectResult;
-import org.apache.struts2.views.util.DefaultUrlHelper;
+import org.apache.struts2.dispatcher.mapper.DefaultActionMapper;
+import org.apache.struts2.url.StrutsQueryStringBuilder;
+import org.apache.struts2.url.StrutsUrlEncoder;
 import org.easymock.IMocksControl;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -44,13 +42,9 @@ import static org.easymock.EasyMock.createControl;
 import static org.easymock.EasyMock.expect;
 
 
-/**
- * @version $Date$ $Id$
- */
 public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
 
     public void testIncludeParameterInResultWithConditionParseOn() throws Exception {
-
         ResultConfig resultConfig = new ResultConfig.Builder("", "")
             .addParam("actionName", "someActionName")
             .addParam("namespace", "someNamespace")
@@ -59,14 +53,12 @@ public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
             .addParam("location", "someLocation")
             .addParam("prependServletContext", "true")
             .addParam("method", "someMethod")
-			.addParam("statusCode", "333")
-			.addParam("param1", "${#value1}")
+            .addParam("statusCode", "333")
+            .addParam("param1", "${#value1}")
             .addParam("param2", "${#value2}")
             .addParam("param3", "${#value3}")
             .addParam("anchor", "${#fragment}")
             .build();
-
-
 
         ActionContext context = ActionContext.getContext();
         ValueStack stack = context.getValueStack();
@@ -78,21 +70,20 @@ public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
         context.put(ServletActionContext.HTTP_REQUEST, req);
         context.put(ServletActionContext.HTTP_RESPONSE, res);
 
-
-        Map<String, ResultConfig> results=  new HashMap<String, ResultConfig>();
+        Map<String, ResultConfig> results = new HashMap<>();
         results.put("myResult", resultConfig);
 
         ActionConfig actionConfig = new ActionConfig.Builder("", "", "")
-                .addResultConfigs(results).build();
+            .addResultConfigs(results).build();
 
         ServletActionRedirectResult result = new ServletActionRedirectResult();
-        result.setActionName("myAction");
-        result.setNamespace("/myNamespace");
+        result.setActionName("myAction${1-1}");
+        result.setNamespace("/myNamespace${1-1}");
         result.setParse(true);
         result.setEncode(false);
         result.setPrependServletContext(false);
         result.setAnchor("fragment");
-        result.setUrlHelper(new DefaultUrlHelper());
+        result.setQueryStringBuilder(new StrutsQueryStringBuilder(new StrutsUrlEncoder()));
 
         IMocksControl control = createControl();
         ActionProxy mockActionProxy = control.createMock(ActionProxy.class);
@@ -104,15 +95,143 @@ public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
         expect(mockInvocation.getStack()).andReturn(stack).anyTimes();
 
         control.replay();
-        result.setActionMapper(container.getInstance(ActionMapper.class));
+        container.inject(result);
         result.execute(mockInvocation);
-        assertEquals("/myNamespace/myAction.action?param1=value+1&param2=value+2&param3=value+3#fragment", res.getRedirectedUrl());
+        assertEquals("/myNamespace0/myAction0.action?param1=value+1&param2=value+2&param3=value+3#fragment", res.getRedirectedUrl());
+
+        control.verify();
+    }
+
+    public void testExpressionParameterInResultWithConditionParseOn() throws Exception {
+        ResultConfig resultConfig = new ResultConfig.Builder("", "")
+            .addParam("actionName", "someActionName")
+            .addParam("namespace", "someNamespace")
+            .addParam("encode", "true")
+            .addParam("parse", "true")
+            .addParam("location", "someLocation")
+            .addParam("prependServletContext", "true")
+            .addParam("method", "someMethod")
+            .addParam("statusCode", "333")
+            .addParam("param1", "${#value1}")
+            .addParam("param2", "${#value2}")
+            .addParam("param3", "${#value3}")
+            .addParam("anchor", "${#fragment}")
+            .build();
+
+        ActionContext context = ActionContext.getContext();
+        ValueStack stack = context.getValueStack();
+        context.getContextMap().put("value1", "value 1");
+        context.getContextMap().put("value2", "value 2");
+        context.getContextMap().put("value3", "value 3");
+        context.getContextMap().put("namespaceName", "${1-1}");
+        context.getContextMap().put("actionName", "${1-1}");
+        context.getContextMap().put("methodName", "${1-1}");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        context.put(ServletActionContext.HTTP_REQUEST, req);
+        context.put(ServletActionContext.HTTP_RESPONSE, res);
+
+        Map<String, ResultConfig> results = new HashMap<>();
+        results.put("myResult", resultConfig);
+
+        ActionConfig actionConfig = new ActionConfig.Builder("", "", "")
+            .addResultConfigs(results).build();
+
+        ServletActionRedirectResult result = new ServletActionRedirectResult();
+        result.setNamespace("/myNamespace${#namespaceName}");
+        result.setActionName("myAction${#actionName}");
+        result.setMethod("myMethod${#methodName}");
+        result.setParse(true);
+        result.setEncode(false);
+        result.setPrependServletContext(false);
+        result.setAnchor("fragment");
+        result.setQueryStringBuilder(new StrutsQueryStringBuilder(new StrutsUrlEncoder()));
+
+        IMocksControl control = createControl();
+        ActionProxy mockActionProxy = control.createMock(ActionProxy.class);
+        ActionInvocation mockInvocation = control.createMock(ActionInvocation.class);
+        expect(mockInvocation.getProxy()).andReturn(mockActionProxy).anyTimes();
+        expect(mockInvocation.getResultCode()).andReturn("myResult").anyTimes();
+        expect(mockActionProxy.getConfig()).andReturn(actionConfig).anyTimes();
+        expect(mockInvocation.getInvocationContext()).andReturn(context).anyTimes();
+        expect(mockInvocation.getStack()).andReturn(stack).anyTimes();
+
+        control.replay();
+        DefaultActionMapper mapper = (DefaultActionMapper) container.getInstance(ActionMapper.class);
+        mapper.setAllowDynamicMethodCalls("true");
+        container.inject(result);
+        result.execute(mockInvocation);
+        assertEquals("/myNamespace${1-1}/myAction${1-1}!myMethod${1-1}.action?param1=value+1&param2=value+2&param3=value+3#fragment", res.getRedirectedUrl());
+
+        req = new MockHttpServletRequest();
+        res = new MockHttpServletResponse();
+        context.put(ServletActionContext.HTTP_REQUEST, req);
+        context.put(ServletActionContext.HTTP_RESPONSE, res);
+        result.execute(mockInvocation);
+        assertEquals("/myNamespace0/myAction0!myMethod0.action?param1=value+1&param2=value+2&param3=value+3#fragment", res.getRedirectedUrl());
+
+        control.verify();
+    }
+
+    public void testIncludeParameterInResultWithConditionParseOnWithNoNamespace() throws Exception {
+        ResultConfig resultConfig = new ResultConfig.Builder("", "")
+            .addParam("actionName", "someActionName")
+            .addParam("namespace", "someNamespace")
+            .addParam("encode", "true")
+            .addParam("parse", "true")
+            .addParam("location", "someLocation")
+            .addParam("prependServletContext", "true")
+            .addParam("method", "someMethod")
+            .addParam("statusCode", "333")
+            .addParam("param1", "${#value1}")
+            .addParam("param2", "${#value2}")
+            .addParam("param3", "${#value3}")
+            .addParam("anchor", "${#fragment}")
+            .build();
+
+        ActionContext context = ActionContext.getContext();
+        ValueStack stack = context.getValueStack();
+        context.getContextMap().put("value1", "value 1");
+        context.getContextMap().put("value2", "value 2");
+        context.getContextMap().put("value3", "value 3");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        context.put(ServletActionContext.HTTP_REQUEST, req);
+        context.put(ServletActionContext.HTTP_RESPONSE, res);
+
+        Map<String, ResultConfig> results = new HashMap<>();
+        results.put("myResult", resultConfig);
+
+        ActionConfig actionConfig = new ActionConfig.Builder("", "", "")
+            .addResultConfigs(results).build();
+
+        ServletActionRedirectResult result = new ServletActionRedirectResult();
+        result.setActionName("myAction${1-1}");
+        result.setParse(true);
+        result.setEncode(false);
+        result.setPrependServletContext(false);
+        result.setAnchor("fragment");
+        result.setQueryStringBuilder(new StrutsQueryStringBuilder(new StrutsUrlEncoder()));
+
+        IMocksControl control = createControl();
+        ActionProxy mockActionProxy = control.createMock(ActionProxy.class);
+        ActionInvocation mockInvocation = control.createMock(ActionInvocation.class);
+        expect(mockInvocation.getProxy()).andReturn(mockActionProxy).times(2);
+        expect(mockInvocation.getResultCode()).andReturn("myResult");
+        expect(mockActionProxy.getConfig()).andReturn(actionConfig);
+        expect(mockActionProxy.getNamespace()).andReturn("${1-1}");
+        expect(mockInvocation.getInvocationContext()).andReturn(context);
+        expect(mockInvocation.getStack()).andReturn(stack).anyTimes();
+
+        control.replay();
+        container.inject(result);
+        result.execute(mockInvocation);
+        assertEquals("/${1-1}/myAction0.action?param1=value+1&param2=value+2&param3=value+3#fragment", res.getRedirectedUrl());
 
         control.verify();
     }
 
     public void testIncludeParameterInResult() throws Exception {
-
         ResultConfig resultConfig = new ResultConfig.Builder("", "")
             .addParam("actionName", "someActionName")
             .addParam("namespace", "someNamespace")
@@ -133,12 +252,11 @@ public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
         context.put(ServletActionContext.HTTP_REQUEST, req);
         context.put(ServletActionContext.HTTP_RESPONSE, res);
 
-
-        Map<String, ResultConfig> results=  new HashMap<String, ResultConfig>();
+        Map<String, ResultConfig> results = new HashMap<>();
         results.put("myResult", resultConfig);
 
         ActionConfig actionConfig = new ActionConfig.Builder("", "", "")
-                .addResultConfigs(results).build();
+            .addResultConfigs(results).build();
 
         ServletActionRedirectResult result = new ServletActionRedirectResult();
         result.setActionName("myAction");
@@ -147,7 +265,7 @@ public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
         result.setEncode(false);
         result.setPrependServletContext(false);
         result.setAnchor("fragment");
-        result.setUrlHelper(new DefaultUrlHelper());
+        result.setQueryStringBuilder(new StrutsQueryStringBuilder(new StrutsUrlEncoder()));
 
         IMocksControl control = createControl();
         ActionProxy mockActionProxy = control.createMock(ActionProxy.class);
@@ -158,7 +276,7 @@ public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
         expect(mockInvocation.getInvocationContext()).andReturn(context);
 
         control.replay();
-        result.setActionMapper(container.getInstance(ActionMapper.class));
+        container.inject(result);
         result.execute(mockInvocation);
         assertEquals("/myNamespace/myAction.action?param1=value+1&param2=value+2&param3=value+3#fragment", res.getRedirectedUrl());
 
@@ -166,7 +284,6 @@ public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
     }
 
     public void testBuildResultWithParameter() throws Exception {
-
         ResultConfig resultConfig = new ResultConfig.Builder("", ServletActionRedirectResult.class.getName())
             .addParam("actionName", "someActionName")
             .addParam("namespace", "someNamespace")
@@ -182,8 +299,8 @@ public class ServletActionRedirectResultTest extends StrutsInternalTestCase {
             .build();
 
         ObjectFactory factory = container.getInstance(ObjectFactory.class);
-        ServletActionRedirectResult result = (ServletActionRedirectResult) factory.buildResult(resultConfig, new HashMap<String, Object>());
+        ServletActionRedirectResult result = (ServletActionRedirectResult) factory.buildResult(resultConfig, ActionContext.getContext().getContextMap());
         assertNotNull(result);
     }
-    
+
 }

@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,16 +18,16 @@
  * under the License.
  */
 -->
-${parameters.after!}<#t/>
+${attributes.after!}<#t/>
     </td><#lt/>
 </tr>
-<#if (parameters.errorposition!"top") == 'bottom'>
-<#assign hasFieldErrors = parameters.name?? && fieldErrors?? && fieldErrors[parameters.name]??/>
+<#if (attributes.errorposition!"top") == 'bottom'>
+<#assign hasFieldErrors = attributes.name?? && fieldErrors?? && fieldErrors.get(attributes.name)??/>
 <#if hasFieldErrors>
-<#list fieldErrors[parameters.name] as error>
-<tr errorFor="${parameters.id}">
+<#list fieldErrors.get(attributes.name) as error>
+<tr errorFor="${attributes.id}">
     <td class="tdErrorMessage" colspan="2"><#rt/>
-        <span class="errorMessage">${error?html}</span><#t/>
+        <span class="errorMessage">${error}</span><#t/>
     </td><#lt/>
 </tr>
 </#list>

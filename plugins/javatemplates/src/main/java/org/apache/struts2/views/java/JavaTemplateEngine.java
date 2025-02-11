@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +18,10 @@
  */
 package org.apache.struts2.views.java;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ObjectFactory;
-import com.opensymphony.xwork2.config.ConfigurationException;
-import com.opensymphony.xwork2.inject.Inject;
+import org.apache.struts2.ActionContext;
+import org.apache.struts2.ObjectFactory;
+import org.apache.struts2.config.ConfigurationException;
+import org.apache.struts2.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.struts2.StrutsException;
@@ -112,7 +110,7 @@ public class JavaTemplateEngine extends BaseTemplateEngine {
      *
      * @param themeClasses a comma delimited list of custom theme class names
      */
-    @Inject(value = "struts.javatemplates.customThemes", required = false)
+    @Inject(value = JavaTemplateConstants.STRUTS_JAVATEMPLATES_CUSTOM_THEMES, required = false)
     public void setThemeClasses(String themeClasses) {
         StringTokenizer customThemes = new StringTokenizer(themeClasses, ",");
         while (customThemes.hasMoreTokens()) {
@@ -137,7 +135,7 @@ public class JavaTemplateEngine extends BaseTemplateEngine {
      *
      * @param defaultTemplateTheme the struts default theme
      */
-    @Inject(value = "struts.javatemplates.defaultTemplateType", required = false)
+    @Inject(value = JavaTemplateConstants.STRUTS_JAVATEMPLATES_DEFAULT_TEMPLATE_TYPE, required = false)
     public void setDefaultTemplateType(String defaultTemplateTheme) {
         // Make sure we don't set ourself as default for race condition
         if (defaultTemplateTheme != null && !defaultTemplateTheme.equalsIgnoreCase(getSuffix())) {

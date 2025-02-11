@@ -1,7 +1,5 @@
 <#--
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +21,7 @@
 <#include "tigris-macros.ftl">
 <#assign hideNav = true>
 <#call startPage pageTitle="Validator Details"/>
-<table>
+<table style="margin-top: 40px">
 <tr><td>Validated Class:</td><td>${action.stripPackage(clazz)}</td></tr>
 <tr><td>Context:</td><td>${context}</td></tr>
 <tr><td>Validator Number:</td><td>${selected}</td></tr>
@@ -36,7 +34,11 @@
             <td>${prop.name}</td>
             <td><#if prop.value??>
                     <#if prop.value?is_collection>(size = ${prop.value?size})<#foreach v in prop.value>${v.value}, </#foreach>
-                    <#else>${prop.value?string}</#if>
+                    <#elseif prop.value?is_date_like>
+                        ${prop.value?datetime}
+                    <#else>
+                        ${prop.value?string}
+                    </#if>
                 <#else> <b>null</b> </#if></td>
             <td><#if prop.value?? && prop.value?is_collection>(collection)<#else>${prop.type.name}</#if></td>
         </tr>

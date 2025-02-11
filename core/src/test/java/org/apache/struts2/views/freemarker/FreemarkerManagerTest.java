@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.freemarker;
 
-import com.opensymphony.xwork2.util.fs.DefaultFileManagerFactory;
+import org.apache.struts2.util.fs.DefaultFileManagerFactory;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.Version;
 import org.apache.commons.io.FileUtils;
 import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.views.jsp.StrutsMockServletContext;
+
+import jakarta.servlet.ServletContext;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Test case for FreemarkerManager
@@ -51,12 +57,61 @@ public class FreemarkerManagerTest extends StrutsInternalTestCase {
         servletContext.setAttribute(FreemarkerManager.CONFIG_SERVLET_CONTEXT_KEY, null);
 
         String tmpPath = "file://" + FileUtils.getTempDirectoryPath();
-        
+
         // when
         manager.load(servletContext, tmpPath);
 
         // then
         assertTrue(true); // should pass
+    }
+
+    public void testIncompatibleImprovementsByOverriding() throws Exception {
+        // given
+        FreemarkerManager manager = new FreemarkerManager() {
+            @Override
+            protected Version getFreemarkerVersion(ServletContext servletContext) {
+                return Configuration.VERSION_2_3_33;
+            }
+        };
+        container.inject(manager);
+
+        // when
+        manager.init(servletContext);
+
+        // then
+        assertEquals(Configuration.VERSION_2_3_33, manager.config.getIncompatibleImprovements());
+    }
+
+    public void testIncompatibleImprovementsWithTemplate() throws Exception {
+        // given
+        FreemarkerManager manager = new FreemarkerManager();
+        container.inject(manager);
+        Configuration configuration = manager.getConfiguration(servletContext);
+        Template tpl = configuration.getTemplate("org/apache/struts2/views/freemarker/incompatible-improvements.ftl");
+
+        // when
+        Writer out = new StringWriter();
+        Map<String, String> model = new HashMap<>();
+        model.put("error", "It's an error message");
+
+        tpl.process(model, out);
+
+        // then
+        assertEquals(Configuration.VERSION_2_3_33, configuration.getIncompatibleImprovements());
+        assertEquals("<input type=\"text\" onclick=\"this.alert('It&#39;s an error message')\"/>", out.toString());
+    }
+
+    public void testIncompatibleImprovementsByServletContext() throws Exception {
+        // given
+        servletContext.setInitParameter("freemarker.incompatible_improvements", "2.3.32");
+        FreemarkerManager manager = new FreemarkerManager();
+        container.inject(manager);
+
+        // when
+        manager.init(servletContext);
+
+        // then
+        assertEquals(Configuration.VERSION_2_3_32, manager.config.getIncompatibleImprovements());
     }
 }
 
@@ -65,5 +120,5 @@ class DummyFreemarkerManager extends FreemarkerManager {
     public void load(StrutsMockServletContext servletContext, String path) {
         createTemplateLoader(servletContext, path);
     }
-    
+
 }

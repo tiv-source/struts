@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.rest.handler;
+
+import org.apache.struts2.ActionInvocation;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -30,17 +29,21 @@ import java.io.Writer;
  */
 public class HtmlHandler implements ContentTypeHandler {
 
-    public String fromObject(Object obj, String resultCode, Writer out) throws IOException {
+    @Override
+    public String fromObject(ActionInvocation invocation, Object obj, String resultCode, Writer out) throws IOException {
         return resultCode;
     }
 
-    public void toObject(Reader in, Object target) {
+    @Override
+    public void toObject(ActionInvocation invocation, Reader in, Object target) {
     }
 
+    @Override
     public String getExtension() {
         return "xhtml";
     }
 
+    @Override
     public String getContentType() {
         return "application/xhtml+xml";
     }

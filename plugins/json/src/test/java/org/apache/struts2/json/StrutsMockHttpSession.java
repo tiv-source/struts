@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.json;
 
-import com.mockobjects.servlet.MockHttpSession;
+import org.springframework.mock.web.MockHttpSession;
 
 import java.util.Enumeration;
 import java.util.Hashtable;

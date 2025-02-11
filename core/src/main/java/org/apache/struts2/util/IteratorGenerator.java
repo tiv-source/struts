@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.util;
 
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
-
 
 /**
  * A bean that generates an iterator filled with a given object depending on the count,
@@ -114,10 +110,12 @@ public class IteratorGenerator implements Iterator, Action {
     }
 
     // Iterator implementation ---------------------------------------
+    @Override
     public boolean hasNext() {
-        return (value == null) ? false : ((currentCount < count) || (count == -1));
+        return value != null && ((currentCount < count) || (count == -1));
     }
 
+    @Override
     public Object next() {
         try {
             return values.get(currentCount % values.size());
@@ -126,6 +124,7 @@ public class IteratorGenerator implements Iterator, Action {
         }
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException("Remove is not supported in IteratorGenerator.");
     }
@@ -135,7 +134,7 @@ public class IteratorGenerator implements Iterator, Action {
     /**
      * Interface for converting each separated token into an Object of choice.
      */
-    public static interface Converter {
+    public interface Converter {
         Object convert(String token) throws Exception;
     }
 }

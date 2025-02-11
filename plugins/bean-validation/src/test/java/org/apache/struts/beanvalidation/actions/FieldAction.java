@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +18,8 @@
  */
 package org.apache.struts.beanvalidation.actions;
 
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 import org.hibernate.validator.constraints.NotBlank;
 
 public class FieldAction extends ActionSupport {
@@ -32,6 +31,7 @@ public class FieldAction extends ActionSupport {
         return test;
     }
 
+    @StrutsParameter
     public void setTest(String test) {
         this.test = test;
     }

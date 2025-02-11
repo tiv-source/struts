@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.struts2.views.jsp;
 
 import java.io.ByteArrayOutputStream;
@@ -26,7 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Locale;
 
-import com.mockobjects.servlet.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 
 /**
@@ -50,7 +47,7 @@ public class StrutsMockHttpServletResponse extends MockHttpServletResponse {
     }
 
     public String getContentType() {
-        return contentType;  //To change body of implemented methods use File | Settings | File Templates.
+        return contentType;  
     }
     
     @Override
@@ -58,7 +55,7 @@ public class StrutsMockHttpServletResponse extends MockHttpServletResponse {
         this.contentType = type;
     }
 
-    public PrintWriter getWriter() throws IOException {
+    public PrintWriter getWriter() {
         if (writer == null)
             return new PrintWriter(new ByteArrayOutputStream());
         else
